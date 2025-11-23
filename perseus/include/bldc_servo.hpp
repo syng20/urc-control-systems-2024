@@ -7,14 +7,14 @@
 #include <libhal/units.hpp>
 
 
-using sec = float;
-
 namespace sjsu::perseus {
 
 class bldc_perseus
 {
 
 public:
+  using sec = float;
+
   bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridge,
                hal::v5::strong_ptr<hal::rotation_sensor> p_encoder);
 
@@ -148,7 +148,13 @@ public:
   void update_position(); 
   /**
    * @brief Feedforward values to account for gravity/weight 
+   * 
    * @return Current feedforward value 
+  */
+  float position_feedforward();
+  /**
+    * @brief get velocity from encoder values 
+    * prints to terminal
   */
   float position_feedforward();
 
@@ -206,6 +212,16 @@ public:
 
   hal::time_duration get_clock_time(hal::steady_clock& p_clock);
 
+  /**
+   * @brief 
+   * 
+   * @param pTerm 
+   * @param iTerm 
+   * @param dTerm 
+   * @param proj_power 
+   * @param ff 
+   */
+  void print_csv_format(float pTerm, float iTerm, float dTerm, float proj_power, float ff);
 
 private:
   hal::v5::strong_ptr<sjsu::drivers::h_bridge>
@@ -225,6 +241,8 @@ private:
   float m_clamped_power;
   float m_prev_encoder_value;
   float home_encoder_value;
+  // feed forward values (weight, length, etc) struct for each servo 
+  // bool saying if pid-ed to position yet, this will be what breaks the loop 
 };
 
 }  // namespace sjsu::perseus
