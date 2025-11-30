@@ -1,0 +1,9 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "build/stm32f103c8/MinSizeRel/generators/CMakePresets.json"
+    ]
+}

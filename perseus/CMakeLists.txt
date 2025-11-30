@@ -18,18 +18,21 @@ project(demos LANGUAGES CXX)
 
 libhal_build_demos(
   DEMOS
-    application
-
+  application
+  track_fig8
+  elbow_fig8
+  track_move
+  shoulder_fig8
+  
   INCLUDES
-  ../drivers/include/
-  include
-  .
+    ../drivers/include/
+    include
+    .
 
 SOURCES
     ../drivers/src/h_bridge.cpp
     src/bldc_servo.cpp
     ../drivers/src/serial_commands.cpp
-    src/can_messaging.cpp
     
 PACKAGES
     #Template for importing libhal packages is "libhal-__device__"
