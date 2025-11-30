@@ -17,8 +17,8 @@ cmake_minimum_required(VERSION 3.20)
 project(demos LANGUAGES CXX)
 
 libhal_build_demos(
-
-DEMOS
+  DEMOS
+  can_demo
   color_sensor_demo
   led_strip_demo
   h_bridge_demo
