@@ -28,6 +28,7 @@
 #include <libhal-arm-mcu/stm32f1/uart.hpp>
 #include <libhal-arm-mcu/stm32f1/usart.hpp>
 #include <libhal-arm-mcu/system_control.hpp>
+#include <libhal-arm-mcu/stm32f1/can2.hpp>
 #include <libhal-exceptions/control.hpp>
 #include <libhal-util/atomic_spin_lock.hpp>
 #include <libhal-util/bit_bang_i2c.hpp>
@@ -39,6 +40,9 @@
 #include <libhal/units.hpp>
 
 #include "../hardware_map.hpp"
+#include <libhal-util/can.hpp>
+#include <libhal-util/serial.hpp>
+#include <libhal/output_pin.hpp>
 #include <libhal/pointers.hpp>
 
 namespace sjsu::drivers::resources {
@@ -214,27 +218,56 @@ hal::v5::strong_ptr<hal::pwm_group_manager> pwm_frequency()
     driver_allocator(), std::move(timer_pwm_frequency));
 }
 
+hal::v5::optional_ptr<hal::stm32f1::can_peripheral_manager_v2> can_manager;
+void initialize_can()
+{
+  constexpr hal::u32 baudrate = 100'000;
+  if (not can_manager) {
+    auto clock_ref = clock();
+    can_manager =
+      hal::v5::make_strong_ptr<hal::stm32f1::can_peripheral_manager_v2>(
+        driver_allocator(),
+        32,
+        driver_allocator(),
+        baudrate,
+        *clock_ref,
+        std::chrono::milliseconds(1),
+        hal::stm32f1::can_pins::pb9_pb8);
+  }
+}
+
+hal::v5::optional_ptr<hal::can_transceiver> can_transceiver_ptr;
 hal::v5::strong_ptr<hal::can_transceiver> can_transceiver()
 {
-  throw hal::operation_not_supported(nullptr);
-  // CAN is commented out in original due to potential stalling issues
-  // TODO(#125): Initializing the can peripheral without it connected to a can
-  // transceiver causes it to stall on occasion.
+  initialize_can();
+  if (not can_transceiver_ptr) {
+    can_transceiver_ptr =
+      hal::acquire_can_transceiver(driver_allocator(), can_manager);
+  }
+  return can_transceiver_ptr;
 }
 
+hal::v5::optional_ptr<hal::can_bus_manager> can_bus_manager_ptr;
 hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager()
 {
-  throw hal::operation_not_supported(nullptr);
-}
-
-hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
-{
-  throw hal::operation_not_supported(nullptr);
+  initialize_can();
+  if (not can_bus_manager_ptr) {
+    can_bus_manager_ptr =
+      hal::acquire_can_bus_manager(driver_allocator(), can_manager);
+  }
+  return can_bus_manager_ptr;
 }
 
 hal::v5::strong_ptr<hal::can_interrupt> can_interrupt()
 {
-  throw hal::operation_not_supported(nullptr);
+  initialize_can();
+  return hal::acquire_can_interrupt(driver_allocator(), can_manager);
+}
+
+hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
+{
+  initialize_can();
+  return hal::acquire_can_identifier_filter(driver_allocator(), can_manager)[0];
 }
 
 [[noreturn]] void terminate_handler() noexcept

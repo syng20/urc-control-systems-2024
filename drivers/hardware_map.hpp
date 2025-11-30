@@ -31,6 +31,10 @@
 #include <libhal/stream_dac.hpp>
 #include <libhal/timer.hpp>
 #include <libhal/zero_copy_serial.hpp>
+
+#include <libhal-arm-mcu/stm32f1/can2.hpp>
+
+
 namespace sjsu::drivers {
 namespace custom {
 /**
@@ -87,6 +91,15 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1();
 hal::v5::strong_ptr<hal::adc> adc_0();
 hal::v5::strong_ptr<hal::adc> adc_1();
 hal::v5::strong_ptr<hal::i2c> i2c();
+
+// hal::v5::optional_ptr<hal::stm32f1::can_peripheral_manager_v2> can_manager;
+// hal::v5::optional_ptr<hal::can_transceiver> can_transceiver_ptr;
+hal::v5::strong_ptr<hal::can_transceiver> can_transceiver(); 
+// hal::v5::optional_ptr<hal::can_bus_manager> can_bus_manager_ptr;
+hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager(); 
+hal::v5::strong_ptr<hal::can_interrupt> can_interrupt(); 
+hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter();
+
 
 inline void reset()
 {
