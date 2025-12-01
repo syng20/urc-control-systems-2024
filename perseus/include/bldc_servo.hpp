@@ -177,6 +177,12 @@ public:
    */
   void print_csv_format(float pTerm, float iTerm, float dTerm, float proj_power, float ff);
 
+  /**
+   * @brief homing (overwrite the homing up top)
+   * 
+   */
+  void homing(); 
+
 private:
   status m_current;
   status m_target;

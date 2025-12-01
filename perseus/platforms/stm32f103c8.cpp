@@ -30,6 +30,7 @@
 #include <libhal-util/serial.hpp>
 #include <libhal/output_pin.hpp>
 #include <libhal/pointers.hpp>
+#include <libhal-arm-mcu/stm32f1/input_pin.hpp>
 
 namespace sjsu::perseus::resources {
 using namespace hal::literals;
@@ -220,6 +221,16 @@ hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
   initialize_can();
   return hal::acquire_can_identifier_filter(driver_allocator(), can_manager)[0];
 }
+
+// homing pin
+hal::v5::strong_ptr<hal::input_pin> homing_pin()
+{
+  // swdiopin23 == pa13_jtms/swdio 
+  return hal::v5::make_strong_ptr<decltype(gpio_a().acquire_input_pin(13))>(
+    driver_allocator(), gpio_a().acquire_input_pin(13));
+}
+
+
 
 // add one for quadrature encoder
 
