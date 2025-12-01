@@ -247,5 +247,16 @@ void bldc_perseus::print_csv_format(float pTerm, float iTerm, float dTerm, float
     ff);
 } 
 
+// home the motor 
+void bldc_perseus::homing()
+{
+  auto homing = resources::homing_pin(); 
+  volatile auto homing_level = homing.driver_level(); 
+  while (homing_level != 0) homing_level = homing.driver_level();
+  m_h_bridge->power(0); // should this be handled by another function? 
+  // and the following too? 
+  // set "homed value" to current encoder value 
+  home_encoder_value = m_encoder->read().angle;
+}
 
 }// namespace sjsu::perseus

@@ -223,6 +223,12 @@ public:
    */
   void print_csv_format(float pTerm, float iTerm, float dTerm, float proj_power, float ff);
 
+  /**
+   * @brief homing (overwrite the homing up top)
+   * 
+   */
+  void homing(); 
+
 private:
   hal::v5::strong_ptr<sjsu::drivers::h_bridge>
     m_h_bridge;
