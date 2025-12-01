@@ -19,6 +19,8 @@ project(demos LANGUAGES CXX)
 libhal_build_demos(
   DEMOS
   application
+  track_fig8
+  elbow_fig8
   
   INCLUDES
   ../drivers/include/
