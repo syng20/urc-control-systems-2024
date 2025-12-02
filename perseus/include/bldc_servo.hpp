@@ -183,6 +183,11 @@ public:
    */
   void homing(); 
 
+  void set_power(float power) {
+    m_h_bridge->power(power);
+  }
+  
+
 private:
   status m_current;
   status m_target;

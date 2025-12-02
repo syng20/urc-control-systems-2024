@@ -155,9 +155,10 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
     driver_allocator(),
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-    5281 * 28 / 2);
-  // shoulder 28
-  // elbow 2
+    753 / 2);
+  // shoulder 28, output shaft: 5281
+  // elbow 2, output shfat: 5281
+  // track 1, output_shaft: 753, 
 }
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {

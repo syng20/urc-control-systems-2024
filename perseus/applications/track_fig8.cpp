@@ -46,17 +46,20 @@ void application()
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
   hal::print(*console, "Track figure 8\n");
-  float start_val = 20; 
-  float end_val = 120; 
-  servo_ptr->set_target_position(start_val);
+  float far_val = 25; 
+  float close_val = 0; 
+//   float p = 0.25; 
+  int dir = 0; 
+//   servo_ptr->set_target_position(close_val);
+//   servo_ptr->set_power(-0.3); 
 
-  bldc_perseus::PID_settings pid_settings = {
-    .kp = 1,
-    .ki = 0,
-    .kd = 0,
-  };
-  servo_ptr->update_pid_position(pid_settings);
-  servo_ptr->set_target_position(start_val);
+//   bldc_perseus::PID_settings pid_settings = {
+//     .kp = 1,
+//     .ki = 0,
+//     .kd = 0,
+//   };
+//   servo_ptr->update_pid_position(pid_settings);
+//   servo_ptr->set_target_position(start_val);
   std::array cmd_defs = {
     drivers::serial_commands::def{
       "setpos",
@@ -122,14 +125,29 @@ void application()
     // drivers::serial_commands::def{ "" },
   };
   sjsu::drivers::serial_commands::handler cmd{ console };
+
+  // encoder returns amount rotated
+  // need to convert to linear distance (*8/(360*10) to get cm)
   
   while (true) {
-    servo_ptr->update_position();
+    // servo_ptr->update_position();
     auto reading = servo.get_current_position();
-    if (reading <= start_val) servo_ptr->set_target_position(end_val);
-    if (reading >= end_val) servo_ptr->set_target_position(start_val);
+    hal::print<128>(*console, "Encoder degrees: %.2f -- ", reading);
+    reading = reading * 8 / 3600; 
+    if (reading <= close_val) {
+        servo_ptr->set_target_position(far_val);
+        servo_ptr->set_power(0.167); 
+        dir = 1; 
+        hal::print<128>(*console, "SWITCH TO FAR\n");
+    }
+    if (reading >= far_val) { 
+        servo_ptr->set_target_position(close_val);
+        servo_ptr->set_power(-0.167); 
+        dir = 0; 
+        hal::print<128>(*console, "SWITCH TO CLOSE\n");
+    }
 
-    hal::print<128>(*console, "Encoder reading: %.2f\n", reading);
+    hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d\n", reading, dir);
     hal::delay(*clock, 100ms);
 
   } 
