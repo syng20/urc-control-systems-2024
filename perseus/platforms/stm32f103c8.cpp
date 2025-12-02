@@ -152,8 +152,10 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
     driver_allocator(),
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-      720); 
-      //this is to just get the plain number of ticks, divided by two bc it reports both A and B channel
+    753 / 2);
+  // shoulder 28, output shaft: 5281
+  // elbow 2, output shfat: 5281
+  // track 1, output_shaft: 753, 
 }
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {
