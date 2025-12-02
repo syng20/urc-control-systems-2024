@@ -9,6 +9,7 @@
 
 #include <bldc_servo.hpp>
 #include <type_traits>
+#include <array>
 
 #include "../hardware_map.hpp"
 #include "../include/bldc_servo.hpp" 
@@ -49,7 +50,15 @@ void application()
   float high_val = -90; 
   float mid_val = -70; 
   float low_val = -50; 
+  float bounds = 1.50; 
   int status = 0; 
+
+  // float running_average = 0.0f; 
+  // float prev_running_average = 0.0f; 
+  // const int ra_total = 10; 
+  // std::array<float, 10> ra_array{0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  // int ra_index = 0; 
+  float ra_check = 0; 
 
   bldc_perseus::PID_settings pid_settings = {
     .kp = 0.015,
@@ -58,6 +67,8 @@ void application()
   };
   servo_ptr->update_pid_position(pid_settings);
   servo_ptr->set_target_position(mid_val);
+  servo_ptr->set_pid_clamped_power(0.5); 
+
   std::array cmd_defs = {
     drivers::serial_commands::def{
       "setpos",
@@ -183,40 +194,48 @@ void application()
     servo_ptr->update_position();
     
     auto reading = servo.get_current_position();
+
+    // prev_running_average = running_average; 
+    // running_average = (running_average*ra_total - ra_array[ra_index] + reading) / ra_total; 
+    // ra_check = abs(running_average - servo.get_target_position()); 
+    // ra_array[ra_index] = reading; 
+    // ra_index = (ra_index >= ra_total) ? 0 : ra_index + 1;
+    // (ra_check < bounds) && (prev_running_average - running_average < bounds)
+    ra_check = abs(reading) - abs(servo.get_target_position()); 
     
     // case
     switch(status) {
       // set to mid 
       case 0: 
-        if (abs(reading - servo.get_target_position()) < 0.05) { 
+        if ((ra_check < bounds)) { 
           servo.set_target_position(high_val); 
           status = 1; 
         }
         break; 
       // mid to high 
       case 1: 
-        if (abs(reading - servo.get_target_position()) < 0.05) { 
+        if ((ra_check < bounds)) { 
           servo.set_target_position(mid_val); 
           status = 2; 
         }
         break; 
       // high to mid 
       case 2: 
-        if (abs(reading - servo.get_target_position()) < 0.05) { 
+        if ((ra_check < bounds)) { 
           servo.set_target_position(low_val); 
           status = 3; 
         }
         break; 
       // mid to low 
       case 3: 
-        if (abs(reading - servo.get_target_position()) < 0.05) { 
+        if ((ra_check < bounds)) { 
           servo.set_target_position(mid_val); 
           status = 4; 
         }
         break; 
       // low to mid 
       case 4: 
-        if (abs(reading - servo.get_target_position()) < 0.05) { 
+        if ((ra_check < bounds)) { 
           servo.set_target_position(high_val); 
           status = 1; 
         }

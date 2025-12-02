@@ -46,9 +46,8 @@ void application()
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
   hal::print(*console, "Track figure 8\n");
-  float far_val = 25; 
-  float close_val = 0; 
-//   float p = 0.25; 
+  float far_val = 10; 
+  float close_val = 1; 
   int dir = 0; 
 //   servo_ptr->set_target_position(close_val);
 //   servo_ptr->set_power(-0.3); 
@@ -136,16 +135,17 @@ void application()
     reading = reading * 8 / 3600; 
     if (reading <= close_val) {
         servo_ptr->set_target_position(far_val);
-        servo_ptr->set_power(0.167); 
+        servo_ptr->set_power(0.2); 
         dir = 1; 
         hal::print<128>(*console, "SWITCH TO FAR\n");
     }
     if (reading >= far_val) { 
         servo_ptr->set_target_position(close_val);
-        servo_ptr->set_power(-0.167); 
+        servo_ptr->set_power(-0.2); 
         dir = 0; 
         hal::print<128>(*console, "SWITCH TO CLOSE\n");
     }
+    // servo_ptr->set_power(-0.2); 
 
     hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d\n", reading, dir);
     hal::delay(*clock, 100ms);

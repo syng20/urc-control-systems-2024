@@ -21,6 +21,7 @@ libhal_build_demos(
   application
   track_fig8
   elbow_fig8
+  track_move
   
   INCLUDES
     ../drivers/include/
