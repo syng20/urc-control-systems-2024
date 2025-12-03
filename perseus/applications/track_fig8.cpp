@@ -46,8 +46,8 @@ void application()
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
   hal::print(*console, "Track figure 8\n");
-  float far_val = 10; 
-  float close_val = 1; 
+  float far_val = 30; 
+  float close_val = 0; 
   int dir = 0; 
 //   servo_ptr->set_target_position(close_val);
 //   servo_ptr->set_power(-0.3); 

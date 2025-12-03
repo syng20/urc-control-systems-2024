@@ -145,7 +145,7 @@ public:
   /**
     * @brief Update position to the target position using PID control and feedforward. 
   */
-  void update_position(); 
+  void update_position(int new_pos); 
   /**
    * @brief Feedforward values to account for gravity/weight 
    * 
@@ -252,6 +252,7 @@ private:
   float m_clamped_power;
   float m_prev_encoder_value;
   float home_encoder_value;
+  float current_time; 
   // feed forward values (weight, length, etc) struct for each servo 
   // bool saying if pid-ed to position yet, this will be what breaks the loop 
 };

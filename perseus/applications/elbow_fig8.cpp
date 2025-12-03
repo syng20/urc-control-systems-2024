@@ -61,14 +61,23 @@ void application()
   float ra_check = 0; 
 
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.015,
-    .ki = 0.002,
-    .kd = 0.02,
+    // .kp = 0.015,
+    // .ki = 0.002,
+    // .kd = 0.02,
+    .kp = 0.05,
+    .ki = 0.015, //0.01
+    .kd = 0.005,
   };
+  bldc_perseus::PID_settings pid_set_zero = {
+    .kp = 0.00,
+    .ki = 0.00,
+    .kd = 0.00,
+  };  
   servo_ptr->update_pid_position(pid_settings);
   servo_ptr->set_target_position(mid_val);
-  auto pos = servo.get_target_position();
-  hal::print<128>(*console, "Target: %.2f\n");
+  servo_ptr->update_position(1);
+  // hal::print<128>(*console, "Target: %.2f\n", servo.get_target_position());
+  hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
   servo_ptr->set_pid_clamped_power(0.5); 
 
   std::array cmd_defs = {
@@ -193,10 +202,11 @@ void application()
           break;
       }
     }
-    servo_ptr->update_position();
+    servo_ptr->update_position(0);
     
-    auto reading = servo.get_current_position();
-    auto pos = servo.get_target_position();
+    float reading = servo_ptr->get_current_position();
+    float pos = servo_ptr->get_target_position();
+    hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
 
     // prev_running_average = running_average; 
     // running_average = (running_average*ra_total - ra_array[ra_index] + reading) / ra_total; 
@@ -211,45 +221,75 @@ void application()
       // set to mid 
       case 0: 
         if ((ra_check < bounds) && (reading != 0)) { 
-          servo.set_target_position(high_val); 
+          servo_ptr->set_target_position(high_val); 
           status = 1; 
+          servo_ptr->update_pid_position(pid_set_zero);
+          servo_ptr->update_position(1);
+          hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, servo_ptr->get_target_position(), ra_check, status);
+          hal::delay(*clock, 1000ms);
+          servo_ptr->update_pid_position(pid_settings);
         }
         break; 
       // mid to high 
       case 1: 
         if ((ra_check < bounds)) { 
-          servo.set_target_position(mid_val); 
+          servo_ptr->set_target_position(mid_val); 
           status = 2; 
+          servo_ptr->update_pid_position(pid_set_zero);
+          servo_ptr->update_position(1);
+          hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
+          hal::delay(*clock, 1000ms);
+          servo_ptr->update_pid_position(pid_settings);
         }
         break; 
       // high to mid 
       case 2: 
         if ((ra_check < bounds)) { 
-          servo.set_target_position(low_val); 
+          servo_ptr->set_target_position(low_val); 
           status = 3; 
+          servo_ptr->update_pid_position(pid_set_zero);
+          servo_ptr->update_position(1);
+          hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
+          hal::delay(*clock, 1000ms);
+          servo_ptr->update_pid_position(pid_settings);
         }
         break; 
       // mid to low 
       case 3: 
         if ((ra_check < bounds)) { 
-          servo.set_target_position(mid_val); 
+          servo_ptr->set_target_position(mid_val); 
           status = 4; 
+          servo_ptr->update_pid_position(pid_set_zero);
+          servo_ptr->update_position(1);
+          hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
+          hal::delay(*clock, 1000ms);
+          servo_ptr->update_pid_position(pid_settings);
         }
         break; 
       // low to mid 
       case 4: 
         if ((ra_check < bounds)) { 
-          servo.set_target_position(high_val); 
+          servo_ptr->set_target_position(high_val); 
           status = 1; 
+          servo_ptr->update_pid_position(pid_set_zero);
+          servo_ptr->update_position(1);
+          hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
+          hal::delay(*clock, 1000ms);
+          servo_ptr->update_pid_position(pid_settings);
         }
         break; 
       default: 
-        servo.set_target_position(mid_val); 
+        servo_ptr->set_target_position(mid_val); 
         status = 0; 
+        servo_ptr->update_pid_position(pid_set_zero);
+        servo_ptr->update_position(1);
+          hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
+        hal::delay(*clock, 1000ms);
+        servo_ptr->update_pid_position(pid_settings);
         break; 
     }
 
-    hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, pos, ra_check, status);
+    // hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, servo_ptr->get_target_position(), ra_check, status);
     hal::delay(*clock, 100ms);
 
   } 

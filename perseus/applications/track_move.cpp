@@ -50,7 +50,7 @@ void application()
 
   while (true) {
     auto reading = servo.get_current_position();
-    servo_ptr->set_power(-0.2); 
+    servo_ptr->set_power(-0.42); 
 
     hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d\n", reading, dir);
     hal::delay(*clock, 100ms);
