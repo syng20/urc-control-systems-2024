@@ -46,19 +46,19 @@ void application()
 
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
-  hal::print(*console, "Elbow figure 8\n");
-  float high_val = -100; 
-  float mid_val = -70; 
-  float low_val = -15; 
+  hal::print(*console, "Shoulder figure 8\n");
+  float high_val = 45; 
+  float mid_val = 20; 
+  float low_val = 10; 
   float bounds = 1.50; 
   int status = 0; 
 
   float ra_check = 0; 
 
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.05,
-    .ki = 0.015, 
-    .kd = 0.005,
+    .kp = 10.0,
+    .ki = 2.00,
+    .kd = 0.00,
   };
   bldc_perseus::PID_settings pid_set_zero = {
     .kp = 0.00,
@@ -68,7 +68,6 @@ void application()
   servo_ptr->update_pid_position(pid_settings);
   servo_ptr->set_target_position(mid_val);
   servo_ptr->update_position(1);
-  // hal::print<128>(*console, "Target: %.2f\n", servo.get_target_position());
   hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
   servo_ptr->set_pid_clamped_power(0.5); 
 
@@ -198,10 +197,11 @@ void application()
     
     float reading = servo_ptr->get_current_position();
     float pos = servo_ptr->get_target_position();
-    hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
-
+    // hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
+    // hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
+                
     ra_check = abs(abs(reading) - abs(pos)); 
-    
+    ///*
     // case
     switch(status) {
       // set to mid 
@@ -211,7 +211,7 @@ void application()
           status = 1; 
           servo_ptr->update_pid_position(pid_set_zero);
           servo_ptr->update_position(1);
-          hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, servo_ptr->get_target_position(), ra_check, status);
+          hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
           hal::delay(*clock, 1000ms);
           servo_ptr->update_pid_position(pid_settings);
         }
@@ -274,7 +274,7 @@ void application()
         servo_ptr->update_pid_position(pid_settings);
         break; 
     }
-
+    //*/
     // hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, servo_ptr->get_target_position(), ra_check, status);
     hal::delay(*clock, 100ms);
 

@@ -137,12 +137,13 @@ void bldc_perseus::update_position(int new_pos)
   m_PID_prev_position_values.prev_dt_time = curr_time;
 
   auto proj_pos = pTerm + iTerm + dTerm;
+  // FOR FEED FORWARD
   float ff_clamp = 0.2;
   float ff = bldc_perseus::position_feedforward() * ff_clamp; // print this? maybe consider as another csv print
-  proj_pos += ff; 
+  // proj_pos += ff; 
+  auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, m_clamped_speed);
   // ELBOW ONLY 
-  // auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, m_clamped_speed);
-  auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, -0.1f*m_clamped_speed);
+  // auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, -0.1f*m_clamped_speed);
 
   m_current.power = proj_power; 
   print_csv_format(pTerm, iTerm, dTerm, proj_power, ff);
@@ -151,16 +152,16 @@ void bldc_perseus::update_position(int new_pos)
 
 float bldc_perseus::position_feedforward() 
 {
-  float length = 0.4826;  // elbow_bar=19in=48.26cm=0.4826m
+  float length = 0.5715;  // elbow_bar=19in=48.26cm=0.4826m
                           // shoulder_bar=22.5in=57.15cm=0.5715m
                           // wrist_bar=12in=30.48cm=0.3048m + 14in=76.2cm=0.762m
   float angle_offset = -20; // elbow=-20
-                          // shoulder=0
+                          // shoulder=-20
                           // wrist=0
-  float weight_beam = 1000 * 9.8; // elbow=1000g
+  float weight_beam = 1600 * 9.8; // elbow=1000g
                                   // shoulder=1600g
                                   // wrist=600g
-  float weight_end = 600 * 9.8;  // add together other parts
+  float weight_end = 1600 * 9.8;  // add together other parts
   
   float y_force = std::sin(std::numbers::pi/180 * (m_current.position + angle_offset)) 
       * length * (weight_beam/2 + weight_end);
@@ -189,15 +190,6 @@ void bldc_perseus::print_csv_format(float pTerm, float iTerm, float dTerm, float
     m_current_position_settings.ki,
     m_current_position_settings.kd,
     ff);
-  // hal::print<256>(
-  //   *console,
-  //   "%.6f, %.6f, %.6f \n",
-  //   ff, 
-  //   m_current.position,
-  //   current_time
-  // );
-  // float t = pTerm+iTerm+dTerm+proj_power+ff; 
-  // t = t-1;
 } 
 
 // home the motor 
