@@ -121,17 +121,6 @@ void application()
         hal::print<32>(*console, "Set max power: %f\n", power);
       },
     },
-    drivers::serial_commands::def{
-      "setpower",
-      [&console, &servo_ptr](auto params) {
-        if (params.size() != 1) {
-          throw hal::argument_out_of_domain(nullptr);
-        }
-        float power = drivers::serial_commands::parse_float(params[0]);
-        servo_ptr->set_power(power);
-        hal::print<32>(*console, "Set max power: %f\n", power);
-      },
-    },
     // drivers::serial_commands::def{ "" },
   };
   sjsu::drivers::serial_commands::handler cmd{ console };
@@ -143,33 +132,20 @@ void application()
     // servo_ptr->update_position();
     auto reading = servo.get_current_position();
     hal::print<128>(*console, "Encoder degrees: %.2f -- ", reading);
-    reading = reading * 8 / 3600;
-
-    try {
-      cmd.handle(cmd_defs);
-    } catch (hal::exception e) {
-      switch (e.error_code()) {
-        case std::errc::argument_out_of_domain:
-          hal::print(*console, "Error: invalid argument length or type\n");
-          break;
-        default:
-          hal::print<32>(*console, "Error code: %d\n", e.error_code());
-          break;
-      }
+    reading = reading * 8 / 3600; 
+    if (reading <= close_val) {
+        servo_ptr->set_target_position(far_val);
+        servo_ptr->set_power(0.2); 
+        dir = 1; 
+        hal::print<128>(*console, "SWITCH TO FAR\n");
     }
-    // if (reading <= close_val) {
-    //     servo_ptr->set_target_position(far_val);
-    //     servo_ptr->set_power(0.2); 
-    //     dir = 1; 
-    //     hal::print<128>(*console, "SWITCH TO FAR\n");
-    // }
-    // if (reading >= far_val) { 
-    //     servo_ptr->set_target_position(close_val);
-    //     servo_ptr->set_power(-0.2); 
-    //     dir = 0; 
-    //     hal::print<128>(*console, "SWITCH TO CLOSE\n");
-    // }
-    // // servo_ptr->set_power(-0.2); 
+    if (reading >= far_val) { 
+        servo_ptr->set_target_position(close_val);
+        servo_ptr->set_power(-0.2); 
+        dir = 0; 
+        hal::print<128>(*console, "SWITCH TO CLOSE\n");
+    }
+    // servo_ptr->set_power(-0.2); 
 
     hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d\n", reading, dir);
     hal::delay(*clock, 100ms);

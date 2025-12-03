@@ -139,9 +139,8 @@ void bldc_perseus::update_position(int new_pos)
   auto proj_pos = pTerm + iTerm + dTerm;
   float ff_clamp = 0.2;
   float ff = bldc_perseus::position_feedforward() * ff_clamp; // print this? maybe consider as another csv print
+  proj_pos += ff; 
   // ELBOW ONLY 
-  if (error > 0) proj_pos += ff*1.5; 
-  else proj_pos += ff; 
   // auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, m_clamped_speed);
   auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, -0.1f*m_clamped_speed);
 
