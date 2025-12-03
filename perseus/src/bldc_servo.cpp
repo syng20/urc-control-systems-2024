@@ -30,6 +30,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   };
   m_target = { .position = 0, .power = 0.0f , .velocity = 0};
   m_clamped_speed = 0.3;
+  current_time = 0; 
   m_prev_encoder_value = m_encoder->read().angle;
   m_PID_prev_velocity_values = {.integral = 0, .last_error = 0, .prev_dt_time = 0.0 };
   m_PID_prev_position_values = { .integral = 0,
@@ -113,7 +114,7 @@ hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
   return period * p_clock.uptime();
 }
 // position 
-void bldc_perseus::update_position() 
+void bldc_perseus::update_position(int new_pos) 
 {
   m_current.position = m_encoder->read().angle;
   auto error = m_target.position - m_current.position;
@@ -121,7 +122,13 @@ void bldc_perseus::update_position()
   auto console = resources::console();
   auto curr_time = hal_time_duration_to_sec(get_clock_time(*clock));
   sec dt = curr_time - m_PID_prev_position_values.prev_dt_time;
-  m_PID_prev_position_values.integral += error * dt; 
+  current_time += dt; 
+  if (new_pos) {
+    m_PID_prev_position_values.integral = 0;
+  } 
+  else {
+    m_PID_prev_position_values.integral += error * dt; 
+  }
   auto derivative = (error - m_PID_prev_position_values.last_error) / dt; // this turns out to be negative because hopefully your current error is less than your last error
   auto pTerm = m_current_position_settings.kp * error; 
   auto iTerm  = m_current_position_settings.ki * m_PID_prev_position_values.integral; 
@@ -130,10 +137,13 @@ void bldc_perseus::update_position()
   m_PID_prev_position_values.prev_dt_time = curr_time;
 
   auto proj_pos = pTerm + iTerm + dTerm;
-  float ff_clamp =0.2;
-  auto ff = bldc_perseus::position_feedforward() * ff_clamp; // print this? maybe consider as another csv print
-  
-  auto proj_power = std::clamp(proj_pos, -1 * m_clamped_speed, m_clamped_speed);
+  float ff_clamp = 0.2;
+  float ff = bldc_perseus::position_feedforward() * ff_clamp; // print this? maybe consider as another csv print
+  // ELBOW ONLY 
+  if (error > 0) proj_pos += ff*1.5; 
+  else proj_pos += ff; 
+  // auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, m_clamped_speed);
+  auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, -0.1f*m_clamped_speed);
 
   m_current.power = proj_power; 
   print_csv_format(pTerm, iTerm, dTerm, proj_power, ff);
@@ -142,21 +152,21 @@ void bldc_perseus::update_position()
 
 float bldc_perseus::position_feedforward() 
 {
-  float length = 0.5715;  // elbow_bar=19in=48.26cm=0.4826m
+  float length = 0.4826;  // elbow_bar=19in=48.26cm=0.4826m
                           // shoulder_bar=22.5in=57.15cm=0.5715m
                           // wrist_bar=12in=30.48cm=0.3048m + 14in=76.2cm=0.762m
-  float angle_offset = 0; // elbow=-20
+  float angle_offset = -20; // elbow=-20
                           // shoulder=0
                           // wrist=0
-  float weight_beam = 1600 * 9.8; // elbow=1000g
+  float weight_beam = 1000 * 9.8; // elbow=1000g
                                   // shoulder=1600g
                                   // wrist=600g
-  float weight_end = 1600 * 9.8;  // add together other parts
+  float weight_end = 600 * 9.8;  // add together other parts
   
-  float y_force = std::sin(std::numbers::pi/180 * (m_target.position + angle_offset)) 
+  float y_force = std::sin(std::numbers::pi/180 * (m_current.position + angle_offset)) 
       * length * (weight_beam/2 + weight_end);
   // for elbow 
-  y_force = -1 * y_force / (length * (weight_beam/2 + weight_end));
+  y_force = y_force / (length * (weight_beam/2 + weight_end));
   // // for wrist (might change)
   // if (m_current.position >= 0) y_force = -1 * y_force / (length * (weight_beam/2 + weight_end));  // >= only for elbow, > for others 
   // else if (m_current.position < 0) y_force =  y_force / (length * (weight_beam/2 + weight_end)); 
@@ -180,6 +190,15 @@ void bldc_perseus::print_csv_format(float pTerm, float iTerm, float dTerm, float
     m_current_position_settings.ki,
     m_current_position_settings.kd,
     ff);
+  // hal::print<256>(
+  //   *console,
+  //   "%.6f, %.6f, %.6f \n",
+  //   ff, 
+  //   m_current.position,
+  //   current_time
+  // );
+  // float t = pTerm+iTerm+dTerm+proj_power+ff; 
+  // t = t-1;
 } 
 
 // home the motor 
