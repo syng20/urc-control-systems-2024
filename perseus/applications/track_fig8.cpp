@@ -135,13 +135,13 @@ void application()
     reading = reading * 8 / 3600; 
     if (reading <= close_val) {
         servo_ptr->set_target_position(far_val);
-        servo_ptr->set_power(0.2); 
+        servo_ptr->set_power(0.5); 
         dir = 1; 
         hal::print<128>(*console, "SWITCH TO FAR\n");
     }
     if (reading >= far_val) { 
         servo_ptr->set_target_position(close_val);
-        servo_ptr->set_power(-0.2); 
+        servo_ptr->set_power(-0.5); 
         dir = 0; 
         hal::print<128>(*console, "SWITCH TO CLOSE\n");
     }
