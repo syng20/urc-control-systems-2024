@@ -47,10 +47,10 @@ void application()
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
   hal::print(*console, "Shoulder figure 8\n");
-  float high_val = -90; 
+  // float high_val = -90; 
   float mid_val = -70; 
-  float low_val = -50; 
-  float bounds = 1.50; 
+  // float low_val = -50; 
+  // float bounds = 1.50; 
   int status = 0; 
 
   // float running_average = 0.0f; 
@@ -214,7 +214,7 @@ void application()
     // ra_array[ra_index] = reading; 
     // ra_index = (ra_index >= ra_total) ? 0 : ra_index + 1;
     // (ra_check < bounds) && (prev_running_average - running_average < bounds)
-    ra_check = abs(abs(reading) - abs(pos)); 
+    // ra_check = abs(abs(reading) - abs(pos)); 
     
     // case
     switch(status) {
