@@ -45,8 +45,8 @@ void application()
 
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
-  hal::print(*console, "Track move back\n");
-  int dir = 0; 
+  hal::print(*console, "Track move by time\n");
+  
   std::array cmd_defs = {
     drivers::serial_commands::def{
       "setpos",
@@ -113,7 +113,9 @@ void application()
   };
   sjsu::drivers::serial_commands::handler cmd{ console };
 
-
+  float pow = 0.3; 
+  servo_ptr->set_pid_clamped_power(pow);
+  
   while (true) {
 
     try {
@@ -129,11 +131,21 @@ void application()
       }
     }
 
-    auto reading = servo.get_current_position();
-    float pow = servo_ptr->get_pid_clamped_power(); 
+    // back and forth by timing 
+    // set (-1) for away from motor 
+    // set (+1) for towards motor 
+    pow = servo_ptr->get_pid_clamped_power() * -1; 
     servo_ptr->set_power(pow); 
-    hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d -- Power: %.2f\n", reading, dir, pow);
-    hal::delay(*clock, 100ms);
+    hal::print<128>(*console, "Power: %.2f\n", pow);
+    hal::delay(*clock, 2000ms);
+
+
+    // // move back and forth only via 'maxpower' command
+    // auto reading = servo.get_current_position();
+    // float pow = servo_ptr->get_pid_clamped_power(); 
+    // servo_ptr->set_power(pow); 
+    // hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d -- Power: %.2f\n", reading, dir, pow);
+    // hal::delay(*clock, 100ms);
 
   } 
 }
