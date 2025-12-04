@@ -39,7 +39,7 @@ void application()
   auto console = resources::console();
   auto clock = resources::clock();
   auto h_bridge = resources::h_bridge();
-  auto encoder = resources::encoder();
+  auto encoder = resources::shoulder_encoder();
   
   bldc_perseus servo(h_bridge, encoder);
   hal::print(*console, "BLDC Servo created...\n");
@@ -67,9 +67,9 @@ void application()
   };  
   servo_ptr->update_pid_position(pid_settings);
   servo_ptr->set_target_position(mid_val);
-  servo_ptr->update_position(1);
+  servo_ptr->update_position(1, 0);
   hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
-  servo_ptr->set_pid_clamped_power(0.5); 
+  servo_ptr->set_pid_clamped_power(0.65); 
 
   std::array cmd_defs = {
     drivers::serial_commands::def{
@@ -193,7 +193,7 @@ void application()
           break;
       }
     }
-    servo_ptr->update_position(0);
+    servo_ptr->update_position(0, 0);
     
     float reading = servo_ptr->get_current_position();
     float pos = servo_ptr->get_target_position();
@@ -210,7 +210,7 @@ void application()
           servo_ptr->set_target_position(high_val); 
           status = 1; 
           servo_ptr->update_pid_position(pid_set_zero);
-          servo_ptr->update_position(1);
+          servo_ptr->update_position(1, 0);
           hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
           hal::delay(*clock, 1000ms);
           servo_ptr->update_pid_position(pid_settings);
@@ -222,7 +222,7 @@ void application()
           servo_ptr->set_target_position(mid_val); 
           status = 2; 
           servo_ptr->update_pid_position(pid_set_zero);
-          servo_ptr->update_position(1);
+          servo_ptr->update_position(1, 0);
           hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
           hal::delay(*clock, 1000ms);
           servo_ptr->update_pid_position(pid_settings);
@@ -234,7 +234,7 @@ void application()
           servo_ptr->set_target_position(low_val); 
           status = 3; 
           servo_ptr->update_pid_position(pid_set_zero);
-          servo_ptr->update_position(1);
+          servo_ptr->update_position(1, 0);
           hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
           hal::delay(*clock, 1000ms);
           servo_ptr->update_pid_position(pid_settings);
@@ -246,7 +246,7 @@ void application()
           servo_ptr->set_target_position(mid_val); 
           status = 4; 
           servo_ptr->update_pid_position(pid_set_zero);
-          servo_ptr->update_position(1);
+          servo_ptr->update_position(1, 0);
           hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
           hal::delay(*clock, 1000ms);
           servo_ptr->update_pid_position(pid_settings);
@@ -258,7 +258,7 @@ void application()
           servo_ptr->set_target_position(high_val); 
           status = 1; 
           servo_ptr->update_pid_position(pid_set_zero);
-          servo_ptr->update_position(1);
+          servo_ptr->update_position(1, 0);
           hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
           hal::delay(*clock, 1000ms);
           servo_ptr->update_pid_position(pid_settings);
@@ -268,7 +268,7 @@ void application()
         servo_ptr->set_target_position(mid_val); 
         status = 0; 
         servo_ptr->update_pid_position(pid_set_zero);
-        servo_ptr->update_position(1);
+        servo_ptr->update_position(1, 0);
           hal::print<128>(*console, "Target: %.2f -- Difference: %.2f -- Encoder reading: %.2f -- Status: %d\n", servo_ptr->get_target_position(), ra_check, reading, status);
         hal::delay(*clock, 1000ms);
         servo_ptr->update_pid_position(pid_settings);

@@ -145,7 +145,7 @@ public:
   /**
     * @brief Update position to the target position using PID control and feedforward. 
   */
-  void update_position(int new_pos); 
+  void update_position(int new_pos, int servo); 
   /**
    * @brief Feedforward values to account for gravity/weight 
    * 
@@ -164,7 +164,11 @@ public:
     * @param power The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
   */
   void set_pid_clamped_power(float power);
-
+  /**
+    * @brief Get the maximum power the PID controller is allowed to use.
+    * @return m_clamped_speed 
+  */
+  float get_pid_clamped_power(); 
   /**
     * @brief Get the maximum power the PID controller is allowed to use.
     * @return The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
@@ -238,9 +242,9 @@ private:
   hal::v5::strong_ptr<sjsu::drivers::h_bridge>
     m_h_bridge;
   hal::v5::strong_ptr<hal::rotation_sensor>
-    m_encoder;
-  hal::v5::strong_ptr<hal::steady_clock> 
-    m_clock;
+    m_encoder;     
+  float m_clamped_speed;
+  float m_prev_encoder_value;
   hal::u64 m_last_clock_check; 
   status m_reading;
   status m_target;
