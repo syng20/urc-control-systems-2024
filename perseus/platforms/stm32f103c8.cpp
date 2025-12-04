@@ -132,9 +132,13 @@ auto& timer3()
   static hal::stm32f1::general_purpose_timer<st_peripheral::timer3> timer3{};
   return timer3;
 }
-
+void set_manager_frequency() {
+  static auto manager = timer3().acquire_pwm_group_frequency(); 
+  manager.frequency(30_kHz); 
+}
 hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_0()
 {
+  set_manager_frequency(); 
   auto timer_pwm_channel =
     timer3().acquire_pwm16_channel(hal::stm32f1::timer3_pin::pa6);
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
@@ -148,7 +152,7 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1()
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
-
+/*
 hal::v5::strong_ptr<hal::rotation_sensor> encoder() 
 {
   return timer2().acquire_quadrature_encoder(
@@ -156,11 +160,47 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
     // 5281 * 2 / 2);
-    5281 * 28 / 2);
-    // 753 / 2);
+    // 5281 * 28 / 2);
+    753 / 2);
   // shoulder 28, output shaft: 5281
   // elbow 2, output shfat: 5281
   // track 1, output_shaft: 753, 
+}*/
+hal::v5::strong_ptr<hal::rotation_sensor> track_encoder() 
+{
+  return timer2().acquire_quadrature_encoder(
+    driver_allocator(),
+    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+      753 / 2);
+  // track 1, output_shaft: 753, 
+}
+hal::v5::strong_ptr<hal::rotation_sensor> shoulder_encoder() 
+{
+  return timer2().acquire_quadrature_encoder(
+    driver_allocator(),
+    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+    5281 * 2 / 2);
+  // shoulder 28, output shaft: 5281
+}
+hal::v5::strong_ptr<hal::rotation_sensor> elbow_encoder() 
+{
+  return timer2().acquire_quadrature_encoder(
+    driver_allocator(),
+    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+      5281 * 28 / 2);
+  // elbow 2, output shfat: 5281
+}
+hal::v5::strong_ptr<hal::rotation_sensor> wrist_encoder() 
+{
+  return timer2().acquire_quadrature_encoder(
+    driver_allocator(),
+    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+      753 / 2);
+  // TODO FIND THIS OUT
 }
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {

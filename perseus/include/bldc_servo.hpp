@@ -128,7 +128,7 @@ public:
   /**
     * @brief Update position to the target position using PID control
   */
-  void update_position(int new_pos); 
+  void update_position(int new_pos, int servo); 
   /**
    * @brief Feedforward values to account for gravity/weight 
    * 
@@ -146,7 +146,11 @@ public:
     * @param power The maximum power as a float between 0.0 and 1.0, representing 0% to 100% of maximum power.
   */
   void set_pid_clamped_power(float power);
-
+  /**
+    * @brief Get the maximum power the PID controller is allowed to use.
+    * @return m_clamped_speed 
+  */
+  float get_pid_clamped_power(); 
   /**
     * @brief Get the current PID settings of the servo.
     * @return The current PID settings of the servo.
@@ -198,7 +202,6 @@ private:
   hal::v5::strong_ptr<hal::rotation_sensor>
     m_encoder;     
   float m_clamped_speed;
-  float m_clamped_accel;
   float m_prev_encoder_value;
   hal::u64 m_last_clock_check; 
   PID_prev_values m_PID_prev_velocity_values; 

@@ -30,7 +30,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   };
   m_target = { .position = 0, .power = 0.0f , .velocity = 0};
   m_clamped_speed = 0.3;
-  current_time = 0; 
+  // current_time = 0; 
   m_prev_encoder_value = m_encoder->read().angle;
   m_PID_prev_velocity_values = {.integral = 0, .last_error = 0, .prev_dt_time = 0.0 };
   m_PID_prev_position_values = { .integral = 0,
@@ -107,6 +107,10 @@ void bldc_perseus::set_pid_clamped_power(float power)
 {
   m_clamped_speed = power; 
 }
+float bldc_perseus::get_pid_clamped_power()
+{
+  return m_clamped_speed; 
+}
 hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
 {
   hal::time_duration const period =
@@ -114,7 +118,7 @@ hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
   return period * p_clock.uptime();
 }
 // position 
-void bldc_perseus::update_position(int new_pos) 
+void bldc_perseus::update_position(int new_pos, int servo) 
 {
   m_current.position = m_encoder->read().angle;
   auto error = m_target.position - m_current.position;
@@ -122,46 +126,64 @@ void bldc_perseus::update_position(int new_pos)
   auto console = resources::console();
   auto curr_time = hal_time_duration_to_sec(get_clock_time(*clock));
   sec dt = curr_time - m_PID_prev_position_values.prev_dt_time;
-  current_time += dt; 
+  // current_time += dt; 
   if (new_pos) {
     m_PID_prev_position_values.integral = 0;
   } 
   else {
     m_PID_prev_position_values.integral += error * dt; 
   }
-  auto derivative = (error - m_PID_prev_position_values.last_error) / dt; // this turns out to be negative because hopefully your current error is less than your last error
-  auto pTerm = m_current_position_settings.kp * error; 
-  auto iTerm  = m_current_position_settings.ki * m_PID_prev_position_values.integral; 
-  auto dTerm = m_current_position_settings.kd * derivative; 
+  float derivative = (error - m_PID_prev_position_values.last_error) / dt; // this turns out to be negative because hopefully your current error is less than your last error
+  float pTerm = m_current_position_settings.kp * error; 
+  float iTerm  = m_current_position_settings.ki * m_PID_prev_position_values.integral; 
+  float dTerm = m_current_position_settings.kd * derivative; 
   m_PID_prev_position_values.last_error = error; 
   m_PID_prev_position_values.prev_dt_time = curr_time;
 
-  auto proj_pos = pTerm + iTerm + dTerm;
-  // FOR FEED FORWARD
-  float ff_clamp = 0.2;
-  float ff = bldc_perseus::position_feedforward() * ff_clamp; // print this? maybe consider as another csv print
-  // proj_pos += ff; 
-  auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, m_clamped_speed);
-  // ELBOW ONLY 
-  // auto proj_power = std::clamp(proj_pos, -1*m_clamped_speed, -0.1f*m_clamped_speed);
+  float proj_pid = pTerm + iTerm + dTerm;
+  float proj_power = proj_pid; 
+  float ff = 0.0f; 
+  float ff_clamp = 0.2; 
+  switch(servo) {
+    // track and shoulder do not need feed forward 
+    case 0: 
+      proj_power = std::clamp(proj_pid, -1*m_clamped_speed, m_clamped_speed);
+      break; 
+    // elbow needs feed forward and upward clamp 
+    case 1: 
+      ff = bldc_perseus::position_feedforward() * ff_clamp;
+      proj_pid += ff; 
+      proj_power = std::clamp(proj_pid, -1*m_clamped_speed, -0.1f*m_clamped_speed);
+      break; 
+    // wrist needs feed forward 
+    case 2: 
+      ff = bldc_perseus::position_feedforward() * ff_clamp;
+      proj_pid += ff; 
+      proj_power = std::clamp(proj_pid, -1*m_clamped_speed, m_clamped_speed);
+      break; 
+    default: 
+      proj_power = std::clamp(proj_pid, -1*m_clamped_speed, m_clamped_speed);
+      break; 
+  }
 
   m_current.power = proj_power; 
   print_csv_format(pTerm, iTerm, dTerm, proj_power, ff);
   m_h_bridge->power(m_current.power);
 }
 
+// will need to be different amounts for elbow/wrist, plus weight 
 float bldc_perseus::position_feedforward() 
 {
-  float length = 0.5715;  // elbow_bar=19in=48.26cm=0.4826m
+  float length = 0.4826;  // elbow_bar=19in=48.26cm=0.4826m
                           // shoulder_bar=22.5in=57.15cm=0.5715m
                           // wrist_bar=12in=30.48cm=0.3048m + 14in=76.2cm=0.762m
   float angle_offset = -20; // elbow=-20
                           // shoulder=-20
                           // wrist=0
-  float weight_beam = 1600 * 9.8; // elbow=1000g
+  float weight_beam = 1000 * 9.8; // elbow=1000g
                                   // shoulder=1600g
                                   // wrist=600g
-  float weight_end = 1600 * 9.8;  // add together other parts
+  float weight_end = 600 * 9.8;  // add together other parts
   
   float y_force = std::sin(std::numbers::pi/180 * (m_current.position + angle_offset)) 
       * length * (weight_beam/2 + weight_end);

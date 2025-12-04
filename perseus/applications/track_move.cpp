@@ -38,7 +38,7 @@ void application()
   auto console = resources::console();
   auto clock = resources::clock();
   auto h_bridge = resources::h_bridge();
-  auto encoder = resources::encoder();
+  auto encoder = resources::track_encoder();
   
   bldc_perseus servo(h_bridge, encoder);
   hal::print(*console, "BLDC Servo created...\n");
@@ -47,12 +47,92 @@ void application()
   
   hal::print(*console, "Track move back\n");
   int dir = 0; 
+  std::array cmd_defs = {
+    drivers::serial_commands::def{
+      "setpos",
+      [&console, &servo_ptr](auto params) {
+        if (params.size() != 1) {
+          throw hal::argument_out_of_domain(nullptr);
+        }
+        float position = drivers::serial_commands::parse_float(params[0]);
+        servo_ptr->set_target_position(position);
+        hal::print<32>(*console, "Set Position to: %f\n", position);
+      },
+    },
+    drivers::serial_commands::def{
+      "setkp",
+      [&console, &servo_ptr](auto params) {
+        if (params.size() != 1) {
+          throw hal::argument_out_of_domain(nullptr);
+        }
+        float kp = drivers::serial_commands::parse_float(params[0]);
+        auto current_settings = servo_ptr->get_pid_settings();
+        current_settings.kp = kp;
+        servo_ptr->update_pid_position(current_settings);
+        hal::print<32>(*console, "Set Kp to: %f\n", kp);
+      },
+    },
+    drivers::serial_commands::def{
+      "setki",
+      [&console, &servo_ptr](auto params) {
+        if (params.size() != 1) {
+          throw hal::argument_out_of_domain(nullptr);
+        }
+        float ki = drivers::serial_commands::parse_float(params[0]);
+        auto current_settings = servo_ptr->get_pid_settings();
+        current_settings.ki = ki;
+        servo_ptr->update_pid_position(current_settings);
+        hal::print<32>(*console, "Set Ki to: %f\n", ki);
+      },
+    },
+    drivers::serial_commands::def{
+      "setkd",
+      [&console, &servo_ptr](auto params) {
+        if (params.size() != 1) {
+          throw hal::argument_out_of_domain(nullptr);
+        }
+        float kd = drivers::serial_commands::parse_float(params[0]);
+        auto current_settings = servo_ptr->get_pid_settings();
+        current_settings.kd = kd;
+        servo_ptr->update_pid_position(current_settings);
+        hal::print<32>(*console, "Set Kd to: %f\n", kd);
+      },
+    },
+    drivers::serial_commands::def{
+      "maxpower",
+      [&console, &servo_ptr](auto params) {
+        if (params.size() != 1) {
+          throw hal::argument_out_of_domain(nullptr);
+        }
+        float power = drivers::serial_commands::parse_float(params[0]);
+        servo_ptr->set_pid_clamped_power(power);
+        hal::print<32>(*console, "Set max power: %f\n", power);
+      },
+    },
+    // drivers::serial_commands::def{ "" },
+  };
+  sjsu::drivers::serial_commands::handler cmd{ console };
+
 
   while (true) {
-    auto reading = servo.get_current_position();
-    servo_ptr->set_power(-0.42); 
 
-    hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d\n", reading, dir);
+    try {
+      cmd.handle(cmd_defs);
+    } catch (hal::exception e) {
+      switch (e.error_code()) {
+        case std::errc::argument_out_of_domain:
+          hal::print(*console, "Error: invalid argument length or type\n");
+          break;
+        default:
+          hal::print<32>(*console, "Error code: %d\n", e.error_code());
+          break;
+      }
+    }
+
+    auto reading = servo.get_current_position();
+    float pow = servo_ptr->get_pid_clamped_power(); 
+    servo_ptr->set_power(pow); 
+    hal::print<128>(*console, "Encoder reading: %.2f -- Dir: %d -- Power: %.2f\n", reading, dir, pow);
     hal::delay(*clock, 100ms);
 
   } 

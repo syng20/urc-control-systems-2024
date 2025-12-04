@@ -38,7 +38,7 @@ void application()
   auto console = resources::console();
   auto clock = resources::clock();
   auto h_bridge = resources::h_bridge();
-  auto encoder = resources::encoder();
+  auto encoder = resources::track_encoder();
   
   bldc_perseus servo(h_bridge, encoder);
   hal::print(*console, "BLDC Servo created...\n");
@@ -46,7 +46,7 @@ void application()
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
   hal::print(*console, "Track figure 8\n");
-  float far_val = 30; 
+  float far_val = 20; 
   float close_val = 0; 
   int dir = 0; 
 //   servo_ptr->set_target_position(close_val);
@@ -135,13 +135,13 @@ void application()
     reading = reading * 8 / 3600; 
     if (reading <= close_val) {
         servo_ptr->set_target_position(far_val);
-        servo_ptr->set_power(0.5); 
+        servo_ptr->set_power(0.25); 
         dir = 1; 
         hal::print<128>(*console, "SWITCH TO FAR\n");
     }
     if (reading >= far_val) { 
         servo_ptr->set_target_position(close_val);
-        servo_ptr->set_power(-0.5); 
+        servo_ptr->set_power(-0.25); 
         dir = 0; 
         hal::print<128>(*console, "SWITCH TO CLOSE\n");
     }
