@@ -266,14 +266,17 @@ hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
 }
 
 // homing pin
+hal::v5::optional_ptr<hal::input_pin> homing_pin_ptr;
 hal::v5::strong_ptr<hal::input_pin> homing_pin()
 {
+  if(not homing_pin_ptr)
+  {
+    auto homing_pin = gpio_a().acquire_input_pin(13);
+    homing_pin_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), std::move(homing_pin));
+  }
   // swdiopin23 == pa13_jtms/swdio 
-  return hal::v5::make_strong_ptr<decltype(gpio_a().acquire_input_pin(13))>(
-    driver_allocator(), gpio_a().acquire_input_pin(13));
+  return homing_pin_ptr;
 }
-
-
 
 // add one for quadrature encoder
 
