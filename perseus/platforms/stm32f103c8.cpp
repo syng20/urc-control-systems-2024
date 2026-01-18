@@ -181,7 +181,7 @@ hal::v5::strong_ptr<hal::rotation_sensor> shoulder_encoder()
     driver_allocator(),
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-    5281 * 2 / 2);
+    5281 * 28 / 2);
   // shoulder 28, output shaft: 5281
 }
 hal::v5::strong_ptr<hal::rotation_sensor> elbow_encoder() 
@@ -190,7 +190,7 @@ hal::v5::strong_ptr<hal::rotation_sensor> elbow_encoder()
     driver_allocator(),
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-      5281 * 28 / 2);
+      5281 * 2 / 2);
   // elbow 2, output shfat: 5281
 }
 hal::v5::strong_ptr<hal::rotation_sensor> wrist_encoder() 
