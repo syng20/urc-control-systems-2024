@@ -110,9 +110,10 @@ public:
 
   /**
     * @brief Get the current velocity of the servo.
-    * @return The current velocity of the servo as a float value representing degrees per second.
+    * @param dt the difference in time between the last encoder reaaing and this one
+    * @return The current velocity of the servo as a hal::u16 ticks per second.
   */
-  float get_reading_velocity();
+  float get_current_velocity_in_tps(float dt);
 
   /**
     * @brief Get the target velocity of the servo.
@@ -121,44 +122,39 @@ public:
   float get_target_velocity();
 
   /**
+    * @brief Get the PID settings of the servo.
+    * @return Current PID values.
+  */
+  bldc_perseus::PID_settings get_pid_settings_position();
+  /**
     * @brief Update the PID settings of the servo.
     * @param settings The PID settings to update.
   */
   void update_pid_position(PID_settings settings);
-
-    /**
+  /**
+    * @brief Get the PID settings of the servo.
+    * @return Current PID values.
+  */
+  bldc_perseus::PID_settings get_pid_settings_velocity();
+  /**
     * @brief Update the PID settings of the servo.
     * @param settings The PID settings to update.
   */
   void update_pid_velocity(PID_settings settings);
-
-  /**
-    * @brief Remembers the current position of the encoder as the home position.
-    * This should be called when the servo is homed.
-  */
-  void home_encoder();
-
-  /**
-    * @brief Update velocity to the target velocity using PID control and feedforward. 
-  */
-  void update_velocity(); 
   /**
     * @brief Update position to the target position using PID control and feedforward. 
   */
-  void update_position(int new_pos, int servo); 
+  void update_position(int from_scratch, int servo); 
   /**
    * @brief Feedforward values to account for gravity/weight 
    * 
    * @return Current feedforward value 
   */
-  float position_feedforward();
+  float position_feedforward(int servo);
   /**
-    * @brief get velocity from encoder values 
-    * prints to terminal
+    * @brief Update velocity to the target velocity using PID control
   */
-  float position_feedforward();
-
-
+  void update_velocity(int from_scratch, int servo); 
   /**
     * @brief Set the maximum power the PID controller is allowed to use.
     * @param power The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
@@ -169,39 +165,6 @@ public:
     * @return m_clamped_speed 
   */
   float get_pid_clamped_power(); 
-  /**
-    * @brief Get the maximum power the PID controller is allowed to use.
-    * @return The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
-  */
-  float get_pid_clamped_power();
-
-  /**
-    * @brief Sets the power (ignores clamped power) 
-    * Use with caution. Check max power beforehand.
-    * @param power The power to set the motor to, as a float between -1.0 and 1.0
-    * where -1 is the maximum in one direction and 1 is the maximum in the other direction.
-  */
-  void set_power(float power);
-
-  /**
-    * @brief Get the power the servo is using.
-    * @return The power as a float between -1.0 and 1.0, representing maximum power in the negative and positive directions. 
-    * The spin is dependant on the wiring, but assuming the positive is wired to Channel A and negative to Channel B,
-    * facing the motor, a positive value will spin clockwise and negative will spin counterclockwise. 
-  */
-  float get_power();
-
-  /**
-   * @brief Resets the internal time tracking for the servo, this will be done
-   * when PID switches between Position and Velocity control.
-   */
-  void reset_time();
-
-  /**
-    * @brief Get the current PID settings of the servo.
-    * @return The current PID settings of the servo.
-  */
-  bldc_perseus::PID_settings get_pid_settings();
 
   // Helper conversion functions (copied from drivetrain_math.hpp)
   constexpr hal::time_duration sec_to_hal_time_duration(sec p_time)
@@ -228,7 +191,7 @@ public:
   void print_csv_format(float pTerm, float iTerm, float dTerm, float proj_power, float ff);
 
   /**
-   * @brief homing (overwrite the homing up top)
+   * @brief Bring [part] back until limit switch hit
    * 
    */
   void homing(); 
