@@ -83,56 +83,7 @@ void application()
         hal::print<32>(*console, "Set Position to: %f\n", position);
       },
     },
-    drivers::serial_commands::def{
-      "setkp",
-      [&console, &servo_ptr](auto params) {
-        if (params.size() != 1) {
-          throw hal::argument_out_of_domain(nullptr);
-        }
-        float kp = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
-        current_settings.kp = kp;
-        servo_ptr->update_pid_position(current_settings);
-        hal::print<32>(*console, "Set Kp to: %f\n", kp);
-      },
-    },
-    drivers::serial_commands::def{
-      "setki",
-      [&console, &servo_ptr](auto params) {
-        if (params.size() != 1) {
-          throw hal::argument_out_of_domain(nullptr);
-        }
-        float ki = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
-        current_settings.ki = ki;
-        servo_ptr->update_pid_position(current_settings);
-        hal::print<32>(*console, "Set Ki to: %f\n", ki);
-      },
-    },
-    drivers::serial_commands::def{
-      "setkd",
-      [&console, &servo_ptr](auto params) {
-        if (params.size() != 1) {
-          throw hal::argument_out_of_domain(nullptr);
-        }
-        float kd = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
-        current_settings.kd = kd;
-        servo_ptr->update_pid_position(current_settings);
-        hal::print<32>(*console, "Set Kd to: %f\n", kd);
-      },
-    },
-    drivers::serial_commands::def{
-      "maxpower",
-      [&console, &servo_ptr](auto params) {
-        if (params.size() != 1) {
-          throw hal::argument_out_of_domain(nullptr);
-        }
-        float power = drivers::serial_commands::parse_float(params[0]);
-        servo_ptr->set_pid_clamped_power(power);
-        hal::print<32>(*console, "Set max power: %f\n", power);
-      },
-    },
+    
     // drivers::serial_commands::def{
     //   "setstatus",
     //   [&console, &servo_ptr](auto params) {
