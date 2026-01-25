@@ -199,7 +199,7 @@ hal::v5::strong_ptr<hal::rotation_sensor> wrist_encoder()
     driver_allocator(),
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-      753 / 2);
+      5281);
   // TODO FIND THIS OUT
 }
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
