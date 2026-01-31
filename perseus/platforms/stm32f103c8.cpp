@@ -166,7 +166,69 @@ hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
     resources::driver_allocator(), std::move(h_bridge));
 }
 
+hal::v5::optional_ptr<hal::stm32f1::can_peripheral_manager_v2> can_manager;
 
+void initialize_can()
+{
+  constexpr hal::u32 baudrate = 1'000'000;
+  if (not can_manager) {
+    auto clock_ref = clock();
+    can_manager =
+      hal::v5::make_strong_ptr<hal::stm32f1::can_peripheral_manager_v2>(
+        driver_allocator(),
+        32,
+        driver_allocator(),
+        baudrate,
+        *clock_ref,
+        std::chrono::milliseconds(1),
+        hal::stm32f1::can_pins::pb9_pb8);
+  }
+}
+
+hal::v5::strong_ptr<hal::can_transceiver> can_transceiver()
+{
+  initialize_can();
+  return hal::acquire_can_transceiver(driver_allocator(), can_manager);
+}
+
+hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager()
+{
+  initialize_can();
+  return hal::acquire_can_bus_manager(driver_allocator(), can_manager);
+}
+
+hal::v5::strong_ptr<hal::can_message_finder> can_finder(
+  hal::v5::strong_ptr<hal::can_transceiver> transceiver,
+  hal::u16 servo_address)
+{
+  return hal::v5::make_strong_ptr<hal::can_message_finder>(
+    driver_allocator(), *transceiver, servo_address);
+}
+
+hal::v5::strong_ptr<hal::can_interrupt> can_interrupt()
+{
+  initialize_can();
+  return hal::acquire_can_interrupt(driver_allocator(), can_manager);
+}
+
+hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
+{
+  initialize_can();
+  return hal::acquire_can_identifier_filter(driver_allocator(), can_manager)[0];
+}
+
+// homing pin
+hal::v5::optional_ptr<hal::input_pin> homing_pin_ptr;
+hal::v5::strong_ptr<hal::input_pin> homing_pin()
+{
+  if(not homing_pin_ptr)
+  {
+    auto homing_pin = gpio_a().acquire_input_pin(13);
+    homing_pin_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), std::move(homing_pin));
+  }
+  // swdiopin23 == pa13_jtms/swdio 
+  return homing_pin_ptr;
+}
 // add one for quadrature encoder
 
 [[noreturn]] void terminate_handler() noexcept

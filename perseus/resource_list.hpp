@@ -76,6 +76,16 @@ hal::v5::strong_ptr<hal::output_pin> status_led();
 // to instantiate H-bridge
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge();
 hal::v5::strong_ptr<hal::rotation_sensor> encoder();
+// can 
+hal::v5::strong_ptr<hal::can_transceiver> can_transceiver(); 
+hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager(); 
+hal::v5::strong_ptr<hal::can_message_finder> can_finder(
+  hal::v5::strong_ptr<hal::can_transceiver> transceiver,
+  hal::u16 servo_address); 
+hal::v5::strong_ptr<hal::can_interrupt> can_interrupt(); 
+hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter(); 
+hal::v5::strong_ptr<hal::input_pin> homing_pin(); 
+
 inline void reset()
 {
   hal::cortex_m::reset();
