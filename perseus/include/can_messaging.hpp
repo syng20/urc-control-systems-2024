@@ -4,6 +4,8 @@
 #include <libhal/rotation_sensor.hpp>
 #include <libhal/units.hpp>
 
+#include <bldc_servo.hpp>
+
 namespace sjsu::perseus {
     
 class can_perseus 
@@ -27,6 +29,8 @@ public:
     // setters
     set_pid_position = 0x31,
     set_pid_velocity = 0x32,
+    // servo to servo 
+    // send_current_actual_position = 0x40, 
     };
     enum servo_address : hal::u16
     {

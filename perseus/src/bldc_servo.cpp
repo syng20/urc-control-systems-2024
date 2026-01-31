@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include <bldc_servo.hpp>
+#include <can_messaging.hpp>
 #include <resource_list.hpp>
 
 using namespace std::chrono_literals;
@@ -117,6 +118,29 @@ void bldc_perseus::set_power(float power) {
   m_h_bridge->power(power);
 }
 
+void bldc_perseus::freeze() {
+  bldc_perseus::PID_settings pos_saved = {
+    .kp = m_reading_position_settings.kp,
+    .ki = m_reading_position_settings.ki,
+    .kd = m_reading_position_settings.kd
+  };
+  bldc_perseus::PID_settings vel_saved = {
+    .kp = m_reading_velocity_settings.kp,
+    .ki = m_reading_velocity_settings.ki,
+    .kd = m_reading_velocity_settings.kd
+  };
+  bldc_perseus::PID_settings hard_stop = {
+    .kp = 0,
+    .ki = 0,
+    .kd = 0
+  };
+  update_pid_position(hard_stop);
+  // SET FOR ELBOW RIGHT NOW
+  // FIX FOR OTHERS
+  update_position(1); 
+  update_pid_position(pos_saved); 
+  update_pid_position(vel_saved); 
+}
 
 void bldc_perseus::stop()
 {
@@ -148,9 +172,20 @@ hal::degrees bldc_perseus::read_angle() {
   return m_encoder->read().angle * m_servo_values.gear_ratio; 
 }
 
-void bldc_perseus::update_velocity() 
+void bldc_perseus::update_velocity(int from_scratch) 
 {
   // TODO : implement velocity PID control
+  if (from_scratch) m_PID_prev_velocity_values.integral = 0; 
+}
+
+void bldc_perseus::set_current_action(hal::u16 action) 
+{
+  m_current_action = action; 
+}
+  
+hal::u16 bldc_perseus::get_current_action() 
+{
+  return m_current_action; 
 }
 
 void bldc_perseus::reset_time()
@@ -179,13 +214,14 @@ hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
   return period * p_clock.uptime();
 }
 // position 
-void bldc_perseus::update_position() 
+void bldc_perseus::update_position(int from_scratch) 
 {
   // pid portion
   m_reading.position = bldc_perseus::read_angle();
   float error = m_target.position - m_reading.position;
   sec curr_time = hal_time_duration_to_sec(get_clock_time(*m_clock));
   sec dt = curr_time - m_PID_prev_position_values.prev_dt_time;
+  if (from_scratch) m_PID_prev_position_values.integral = 0; 
   m_PID_prev_position_values.integral += error * dt; 
   float derivative = (error - m_PID_prev_position_values.last_error) / dt; 
   float pTerm = m_reading_position_settings.kp * error; 

@@ -11,6 +11,7 @@
 #include <can_messaging.hpp>
 #include <resource_list.hpp>
 
+
 using namespace std::chrono_literals;
 namespace sjsu::perseus {
 
@@ -65,7 +66,7 @@ void application()
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   // can pt2
-  constexpr servo_address allowed_id = elbow_servo; 
+  constexpr servo_address allowed_id = shoulder_servo; 
   can_perseus servo_can(allowed_id); 
   hal::print(*console, "Servo can creature setup...\n");
 
@@ -89,6 +90,7 @@ void application()
 
 //   constexpr auto allowed_id = servo_address;
   hal::can_message_finder message_finder(*can_transceiver, allowed_id);
+  auto message_finder_pointer = hal::v5::make_strong_ptr<hal::can_message_finder>(resources::driver_allocator(), hal::can_message_finder);
   can_id_filter->allow(allowed_id);
   hal::print<64>(
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", allowed_id);
@@ -103,6 +105,7 @@ void application()
 //   };
   
   int set = 0; 
+  volatile hal::u16 action = 0x00;
 
   while (true) {
     using namespace std::chrono_literals;
@@ -117,14 +120,14 @@ void application()
       message_finder.transceiver().send(*response);
       print_can_message(*console, *response);
       hal::print<64>(*console, "finished transmission\n");
-      set = 2;
+      action = servo_ptr->bldc_perseus::get_current_action(); 
     }
 
-    if (set == 2) { 
-        servo_ptr->update_position(); 
-        set = 1; 
+    if (action == 0x12) { 
+      servo_ptr->update_position(1); 
+      if (fabs(servo_ptr->get_reading_position() - servo_ptr->get_target_position()) < 1.5) 
+        servo_ptr->freeze(); 
     } 
-    else if (set == 1) servo_ptr->update_position(); 
 
   }
   

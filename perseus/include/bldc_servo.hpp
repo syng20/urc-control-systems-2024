@@ -5,6 +5,10 @@
 #include <libhal/pointers.hpp>
 #include <libhal/rotation_sensor.hpp>
 #include <libhal/units.hpp>
+// #include <libhal/can.hpp>
+
+// #include <can_messaging.hpp>
+#include <resource_list.hpp>
 
 
 using sec = float;
@@ -105,6 +109,11 @@ public:
    */
   void stop();
 
+  /**
+   * @brief Freezes rover in place
+   */
+  void freeze(); 
+
 
   hal::degrees read_angle(); 
 
@@ -141,11 +150,11 @@ public:
   /**
     * @brief Update velocity to the target velocity using PID control and feedforward. 
   */
-  void update_velocity(); 
+  void update_velocity(int from_scratch); 
   /**
     * @brief Update position to the target position using PID control and feedforward. 
   */
-  void update_position(); 
+  void update_position(int from_scratch); 
   /**
    * @brief Feedforward values to account for gravity/weight 
    * @return Current feedforward value 
@@ -178,6 +187,19 @@ public:
     * @return The power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
   */
   float get_power();
+
+
+  /**
+    * @brief Set the servo's current action 
+    * @param action can_perseus::action value to be set 
+  */
+  void set_current_action(hal::u16 action); 
+  
+  /**
+    * @brief Get the servo's current action 
+    * @return Returns the current action as a can_perseus::action 
+  */
+  hal::u16 get_current_action(); 
 
   /**
    * @brief Resets the internal time tracking for the servo, this will be done
@@ -223,6 +245,7 @@ private:
   float m_clamped_power;
   float m_prev_encoder_value;
   float home_encoder_value;
+  hal::u16 m_current_action; 
 };
 
 }  // namespace sjsu::perseus

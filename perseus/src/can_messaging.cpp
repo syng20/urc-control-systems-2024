@@ -62,33 +62,15 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
     //   break;
     // }
     case action::freeze:{
-      bldc_perseus::PID_settings pos_saved = {
-        .kp = bldc->get_pid_settings().kp,
-        .ki = bldc->get_pid_settings().ki,
-        .kd = bldc->get_pid_settings().kd
-      };
-      bldc_perseus::PID_settings vel_saved = {
-        .kp = bldc->get_pid_settings().kp,
-        .ki = bldc->get_pid_settings().ki,
-        .kd = bldc->get_pid_settings().kd
-      };
-      bldc_perseus::PID_settings hard_stop = {
-        .kp = 0,
-        .ki = 0,
-        .kd = 0
-      };
-      bldc->update_pid_position(hard_stop);
-      // SET FOR ELBOW RIGHT NOW
-      // FIX FOR OTHERS
-      for (int i = 0; i < 4; i++) bldc->update_position(); 
-      bldc->update_pid_position(pos_saved); 
-      bldc->update_pid_position(vel_saved); 
+      bldc->freeze(); 
+      bldc->set_current_action(static_cast<hal::u16>(action::freeze)); 
       break;
     }
     case action::heartbeat: {
       response->id = static_cast<hal::byte>(action::heartbeat) + 0x100;
       response->length = 1;
       response->payload[0] = m_curr_servo_addr + 0x50;
+      bldc->set_current_action(static_cast<hal::u16>(action::heartbeat)); 
       break; 
     }
     case action::homing: {
@@ -96,6 +78,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response->length = 1;
       response->payload[0] = 0x01;
       response->payload[1] = 0x11;
+      bldc->set_current_action(static_cast<hal::u16>(action::homing)); 
       break; 
     }
     case action::set_position: {
@@ -105,6 +88,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response->id = static_cast<hal::byte>(action::set_position) + 0x100;
       response->length = 1;
       response->payload[0] = static_cast<hal::byte>(action::set_position) + 0x50;;
+      bldc->set_current_action(static_cast<hal::u16>(action::set_position)); 
       break;
     }
     case action::read_position: {
@@ -115,6 +99,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response->payload[0] = 0x20 + 0x50; 
       response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
       response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+      bldc->set_current_action(static_cast<hal::u16>(action::read_position)); 
       break;
     }
     case action::read_velocity: {
@@ -125,6 +110,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response->payload[0] = 0x20 + 0x50; 
       response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
       response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+      bldc->set_current_action(static_cast<hal::u16>(action::read_velocity)); 
       break;
     }
     case action::set_pid_position: {
@@ -137,6 +123,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response->id = static_cast<hal::byte>(action::set_pid_position) + 0x100;
       response->length = 1;
       response->payload[0] = static_cast<hal::byte>(action::set_pid_position) + 0x50;
+      bldc->set_current_action(static_cast<hal::u16>(action::set_pid_position)); 
       break;
     }
     case action::set_pid_velocity: {
@@ -149,6 +136,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response->id = static_cast<hal::byte>(action::set_pid_velocity) + 0x100;
       response->length = 1;
       response->payload[0] = static_cast<hal::byte>(action::set_pid_velocity) + 0x50;
+      bldc->set_current_action(static_cast<hal::u16>(action::set_pid_velocity)); 
       break;
     }
     default:
