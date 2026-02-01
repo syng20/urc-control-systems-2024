@@ -78,7 +78,7 @@ void application()
           throw hal::argument_out_of_domain(nullptr);
         }
         float kp = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
+        auto current_settings = servo_ptr->get_pid_settings_position();
         current_settings.kp = kp;
         servo_ptr->update_pid_position(current_settings);
         hal::print<32>(*console, "Set Kp to: %f\n", kp);
@@ -91,7 +91,7 @@ void application()
           throw hal::argument_out_of_domain(nullptr);
         }
         float ki = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
+        auto current_settings = servo_ptr->get_pid_settings_position();
         current_settings.ki = ki;
         servo_ptr->update_pid_position(current_settings);
         hal::print<32>(*console, "Set Ki to: %f\n", ki);
@@ -104,7 +104,7 @@ void application()
           throw hal::argument_out_of_domain(nullptr);
         }
         float kd = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
+        auto current_settings = servo_ptr->get_pid_settings_position();
         current_settings.kd = kd;
         servo_ptr->update_pid_position(current_settings);
         hal::print<32>(*console, "Set Kd to: %f\n", kd);

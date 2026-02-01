@@ -20,12 +20,12 @@ libhal_build_demos(
   DEMOS
     # application
     #can_test
-    # track_fig8
-    # track_move
+    track_fig8
+    track_move
     # elbow_fig8
     # homing_test
     # shoulder_fig8
-    wristTest
+    # wristTest
   INCLUDES
   ../drivers/include/
   include
