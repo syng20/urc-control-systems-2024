@@ -20,8 +20,6 @@ libhal_build_demos(
   DEMOS
     application
     can_test
-    elbow_can_test
-    shoulder_can_test
   
   INCLUDES
     ../drivers/include/

@@ -90,7 +90,7 @@ void application()
 
 //   constexpr auto allowed_id = servo_address;
   hal::can_message_finder message_finder(*can_transceiver, allowed_id);
-  auto message_finder_pointer = hal::v5::make_strong_ptr<hal::can_message_finder>(resources::driver_allocator(), hal::can_message_finder);
+  auto message_finder_pointer = hal::v5::make_strong_ptr<hal::can_message_finder>(resources::driver_allocator(), hal::can_message_finder(*can_transceiver, allowed_id));
   can_id_filter->allow(allowed_id);
   hal::print<64>(
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", allowed_id);
@@ -104,7 +104,6 @@ void application()
 //     .payload = {},
 //   };
   
-  int set = 0; 
   volatile hal::u16 action = 0x00;
 
   while (true) {
@@ -121,10 +120,11 @@ void application()
       print_can_message(*console, *response);
       hal::print<64>(*console, "finished transmission\n");
       action = servo_ptr->bldc_perseus::get_current_action(); 
+      if (action == 0x12) servo_ptr->update_position(1); 
     }
 
     if (action == 0x12) { 
-      servo_ptr->update_position(1); 
+      servo_ptr->update_position(0); 
       if (fabs(servo_ptr->get_reading_position() - servo_ptr->get_target_position()) < 1.5) 
         servo_ptr->freeze(); 
     } 
