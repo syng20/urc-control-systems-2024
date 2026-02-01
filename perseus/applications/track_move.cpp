@@ -66,7 +66,7 @@ void application()
           throw hal::argument_out_of_domain(nullptr);
         }
         float kp = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
+        auto current_settings = servo_ptr->get_pid_settings_position();
         current_settings.kp = kp;
         servo_ptr->update_pid_position(current_settings);
         hal::print<32>(*console, "Set Kp to: %f\n", kp);
@@ -79,7 +79,7 @@ void application()
           throw hal::argument_out_of_domain(nullptr);
         }
         float ki = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
+        auto current_settings = servo_ptr->get_pid_settings_position();
         current_settings.ki = ki;
         servo_ptr->update_pid_position(current_settings);
         hal::print<32>(*console, "Set Ki to: %f\n", ki);
@@ -92,7 +92,7 @@ void application()
           throw hal::argument_out_of_domain(nullptr);
         }
         float kd = drivers::serial_commands::parse_float(params[0]);
-        auto current_settings = servo_ptr->get_pid_settings();
+        auto current_settings = servo_ptr->get_pid_settings_position();
         current_settings.kd = kd;
         servo_ptr->update_pid_position(current_settings);
         hal::print<32>(*console, "Set Kd to: %f\n", kd);
@@ -113,8 +113,9 @@ void application()
   };
   sjsu::drivers::serial_commands::handler cmd{ console };
 
-  float pow = 0.3; 
+  float pow = -0.3; 
   servo_ptr->set_pid_clamped_power(pow);
+  auto reading = servo.get_current_position();
   
   while (true) {
 
@@ -134,9 +135,10 @@ void application()
     // back and forth by timing 
     // set (-1) for away from motor 
     // set (+1) for towards motor 
-    pow = servo_ptr->get_pid_clamped_power() * -1; 
-    servo_ptr->set_power(pow); 
+    servo_ptr->set_power(pow);
+    reading = servo.get_current_position();
     hal::print<128>(*console, "Power: %.2f\n", pow);
+    hal::print<128>(*console, "Encoder reading: %.2f -- -- Power: %.2f\n", reading, pow);
     hal::delay(*clock, 2000ms);
 
 
