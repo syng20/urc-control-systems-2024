@@ -125,9 +125,13 @@ void bldc_perseus::stop()
 }
 
 
-bldc_perseus::PID_settings bldc_perseus::get_pid_settings()
+bldc_perseus::PID_settings bldc_perseus::get_position_pid_settings()
 {
   return m_reading_position_settings;
+}
+bldc_perseus::PID_settings bldc_perseus::get_velocity_pid_settings()
+{
+  return m_reading_velocity_settings;
 }
 void bldc_perseus::update_pid_position(PID_settings settings)
 {
@@ -148,9 +152,10 @@ hal::degrees bldc_perseus::read_angle() {
   return m_encoder->read().angle * m_servo_values.gear_ratio; 
 }
 
-void bldc_perseus::update_velocity() 
+void bldc_perseus::update_velocity(int from_scratch) 
 {
   // TODO : implement velocity PID control
+  from_scratch = from_scratch + 1; 
 }
 
 void bldc_perseus::reset_time()
@@ -179,13 +184,16 @@ hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
   return period * p_clock.uptime();
 }
 // position 
-void bldc_perseus::update_position() 
+void bldc_perseus::update_position(int from_scratch) 
 {
   // pid portion
   m_reading.position = bldc_perseus::read_angle();
   float error = m_target.position - m_reading.position;
   sec curr_time = hal_time_duration_to_sec(get_clock_time(*m_clock));
   sec dt = curr_time - m_PID_prev_position_values.prev_dt_time;
+  if (from_scratch) {
+    m_PID_prev_position_values.integral = 0; 
+  }
   m_PID_prev_position_values.integral += error * dt; 
   float derivative = (error - m_PID_prev_position_values.last_error) / dt; 
   float pTerm = m_reading_position_settings.kp * error; 
@@ -215,6 +223,28 @@ float bldc_perseus::position_feedforward()
 {
   return std::sin(std::numbers::pi/180 * (m_reading.position + m_servo_values.angle_offset)) 
     * m_servo_values.feedforward_clamp; 
+}
+
+// home the motor 
+void bldc_perseus::homing()
+{
+  auto homing = resources::homing_pin(); 
+  volatile auto homing_level = homing->level(); 
+  
+  // for elbow 
+  bldc_perseus::set_target_velocity(-1); 
+  bldc_perseus::update_velocity(1); 
+  while(homing_level != 0) 
+  {
+    // for elbow
+    bldc_perseus::update_velocity(0); 
+    homing_level = homing->level();
+  }
+  m_reading_velocity_settings = {0.0f, 0.0f, 0.0f}; 
+  bldc_perseus::update_velocity(1); 
+
+  // set "homed value" to current encoder value 
+  home_encoder_value = m_encoder->read().angle;
 }
 
 }// namespace sjsu::perseus

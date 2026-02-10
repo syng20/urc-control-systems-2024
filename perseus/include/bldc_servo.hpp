@@ -140,12 +140,14 @@ public:
 
   /**
     * @brief Update velocity to the target velocity using PID control and feedforward. 
+    * @param from_scratch Update with new target
   */
-  void update_velocity(); 
+  void update_velocity(int from_scratch); 
   /**
     * @brief Update position to the target position using PID control and feedforward. 
+    * @param from_scratch Update with new target
   */
-  void update_position(); 
+  void update_position(int from_scratch); 
   /**
    * @brief Feedforward values to account for gravity/weight 
    * @return Current feedforward value 
@@ -188,10 +190,22 @@ public:
   void reset_time();
 
   /**
-    * @brief Get the current PID settings of the servo.
-    * @return The current PID settings of the servo.
+    * @brief Get the current position PID settings of the servo.
+    * @return The current position PID settings of the servo.
   */
-  bldc_perseus::PID_settings get_pid_settings();
+  bldc_perseus::PID_settings get_position_pid_settings();
+
+  /**
+    * @brief Get the current position PID settings of the servo.
+    * @return The current position PID settings of the servo.
+  */
+  bldc_perseus::PID_settings get_velocity_pid_settings();
+ 
+  /**
+   * @brief Bring [part] back until limit switch hit
+   * 
+   */
+  void homing(); 
 
   // Helper conversion functions (copied from drivetrain_math.hpp)
   constexpr hal::time_duration sec_to_hal_time_duration(sec p_time)
@@ -225,6 +239,8 @@ private:
   float m_clamped_power;
   float m_prev_encoder_value;
   float home_encoder_value;
+
 };
+
 
 }  // namespace sjsu::perseus

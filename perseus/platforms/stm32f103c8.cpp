@@ -131,7 +131,6 @@ auto& timer3()
   static hal::stm32f1::general_purpose_timer<st_peripheral::timer3> timer3{};
   return timer3;
 }
-
 hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_0()
 {
   auto timer_pwm_channel =
@@ -209,6 +208,19 @@ hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
 {
   initialize_can();
   return hal::acquire_can_identifier_filter(driver_allocator(), can_manager)[0];
+}
+
+// homing pin
+hal::v5::optional_ptr<hal::input_pin> homing_pin_ptr;
+hal::v5::strong_ptr<hal::input_pin> homing_pin()
+{
+  if(not homing_pin_ptr)
+  {
+    auto homing_pin = gpio_a().acquire_input_pin(13);
+    homing_pin_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), std::move(homing_pin));
+  }
+  // swdiopin23 == pa13_jtms/swdio 
+  return homing_pin_ptr;
 }
 
 // add one for quadrature encoder

@@ -28,6 +28,7 @@
 #include <libhal/serial.hpp>
 #include <libhal/steady_clock.hpp>
 #include <libhal/timer.hpp>
+#include <libhal-util/can.hpp>
 
 #include <resource_list.hpp>
 
@@ -79,6 +80,7 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder();
 // can instantiation
 hal::v5::strong_ptr<hal::can_transceiver> can_transceiver();
 hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager();
+hal::v5::strong_ptr<hal::can_interrupt> can_interrupt(); 
 hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter();
 
 inline void reset()
@@ -90,6 +92,7 @@ inline void sleep(hal::time_duration p_duration)
   auto delay_clock = resources::clock();
   hal::delay(*delay_clock, p_duration);
 }
+hal::v5::strong_ptr<hal::input_pin> homing_pin(); // for homing (pin 23)
 }  // namespace resources
 
 // Application function is implemented by one of the .cpp files.

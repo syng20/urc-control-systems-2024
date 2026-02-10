@@ -1,11 +1,14 @@
-//copied from drivers/applications/h_bridge_demo.cpp
+// copied from drivers/applications/h_bridge_demo.cpp
 
-#include <h_bridge.hpp>
+#include <libhal-util/can.hpp>
+#include <libhal-util/serial.hpp>
 #include <libhal-util/steady_clock.hpp>
 #include <libhal/can.hpp>
 #include <libhal/error.hpp>
 #include <libhal/pointers.hpp>
 
+#include <serial_commands.hpp>
+#include <h_bridge.hpp>
 #include <bldc_servo.hpp>
 #include <resource_list.hpp>
 

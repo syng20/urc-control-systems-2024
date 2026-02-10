@@ -180,7 +180,7 @@ hal::v5::strong_ptr<hal::input_pin> front_left_limit_switch()
     auto front_left_limit_switch = gpio_b().acquire_input_pin(12);  // 4
     front_left_limit_switch_ptr =
       hal::v5::make_strong_ptr<decltype(front_left_limit_switch)>(
-        driver_allocator(), std::move(front_left_limit_switch));
+        driver_allocator(), std::move(front_left_limit_switch)); 
   }
   return front_left_limit_switch_ptr;
 }
