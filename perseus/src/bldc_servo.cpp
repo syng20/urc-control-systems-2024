@@ -48,7 +48,7 @@ float bldc_perseus::get_target_position()
 
 float bldc_perseus::get_reading_position()
 {
-  m_reading.position = bldc_perseus::read_angle();
+  m_reading.position = read_angle() / m_servo_values.gear_ratio;
   return m_reading.position;
 }
 
@@ -111,6 +111,22 @@ bldc_perseus::PID_settings bldc_perseus::get_pid_settings_velocity()
 void bldc_perseus::update_pid_velocity(PID_settings settings)
 {
   m_reading_velocity_settings = settings;
+}
+void bldc_perseus::home_encoder()
+{
+  // TODO!
+  home_encoder_value = read_angle();
+  m_reading.position = 0;
+}
+
+hal::degrees bldc_perseus::read_angle() {
+  return m_encoder->read().angle; 
+}
+
+void bldc_perseus::update_velocity(int from_scratch) 
+{
+  // TODO : implement velocity PID control
+  from_scratch = from_scratch + 1; 
 }
 
 void bldc_perseus::reset_time()

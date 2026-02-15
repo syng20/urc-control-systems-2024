@@ -196,8 +196,9 @@ void application()
     }
     servo_ptr->update_position(0, 1);
     
-    auto reading = servo.get_current_position();
-    pos = servo.get_target_position();
+    float reading = servo_ptr->get_reading_position();
+    float pos = servo_ptr->get_target_position();
+    hal::print<128>(*console, "Target: %.2f\n", servo_ptr->get_target_position());
 
     ra_check = abs(abs(reading) - abs(pos)); 
     
@@ -274,7 +275,7 @@ void application()
         break; 
     }
 
-    // hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, servo_ptr->get_target_position(), ra_check, status);
+    hal::print<128>(*console, "Encoder reading: %.2f -- Target: %.2f -- Difference: %.2f -- Status: %d\n", reading, servo_ptr->get_target_position(), ra_check, status);
     hal::delay(*clock, 100ms);
 
   } 

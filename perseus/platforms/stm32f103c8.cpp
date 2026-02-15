@@ -88,17 +88,17 @@ hal::v5::strong_ptr<hal::output_pin> status_led()
   return led_ptr;
 }
 
-hal::v5::strong_ptr<hal::output_pin> output_pin_0()
-{
-  return hal::v5::make_strong_ptr<decltype(gpio_a().acquire_output_pin(0))>(
-    driver_allocator(), gpio_a().acquire_output_pin(0));
-}
+// hal::v5::strong_ptr<hal::output_pin> output_pin_0()
+// {
+//   return hal::v5::make_strong_ptr<decltype(gpio_a().acquire_output_pin(0))>(
+//     driver_allocator(), gpio_a().acquire_output_pin(0));
+// }
 
-hal::v5::strong_ptr<hal::output_pin> output_pin_1()
-{
-  return hal::v5::make_strong_ptr<decltype(gpio_a().acquire_output_pin(15))>(
-    driver_allocator(), gpio_a().acquire_output_pin(15));
-}
+// hal::v5::strong_ptr<hal::output_pin> output_pin_1()
+// {
+//   return hal::v5::make_strong_ptr<decltype(gpio_a().acquire_output_pin(15))>(
+//     driver_allocator(), gpio_a().acquire_output_pin(15));
+// }
 
 auto& timer1()
 {
@@ -150,7 +150,44 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1()
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
-/*
+
+hal::v5::strong_ptr<hal::pwm> pwm_0()
+{
+  static auto timer_old_pwm =
+    timer2().acquire_pwm(hal::stm32f1::timer2_pin::pa0);
+  return hal::v5::make_strong_ptr<decltype(timer_old_pwm)>(
+    driver_allocator(), std::move(timer_old_pwm));
+}
+hal::v5::strong_ptr<hal::pwm> pwm_1()
+{
+  static auto timer_old_pwm =
+    timer2().acquire_pwm(hal::stm32f1::timer2_pin::pa1);
+  return hal::v5::make_strong_ptr<decltype(timer_old_pwm)>(
+    driver_allocator(), std::move(timer_old_pwm));
+}
+
+// hal::v5::optional_ptr<hal::output_pin> pa0_ptr;
+// hal::v5::strong_ptr<hal::output_pin> output_pa0()
+// {
+//   if(not pa0_ptr)
+//   {
+//     auto homing_pin = gpio_a().acquire_output_pin(0);
+//     pa0_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), gpio_a().acquire_output_pin(0));
+//   }
+//   return pa0_ptr;
+// }
+// hal::v5::optional_ptr<hal::output_pin> pa1_ptr;
+// hal::v5::strong_ptr<hal::output_pin> output_pa1()
+// {
+//   if(not pa0_ptr)
+//   {
+//     auto homing_pin = gpio_a().acquire_output_pin(1);
+//     pa1_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), gpio_a().acquire_output_pin(1));
+//   }
+//   return pa1_ptr;
+// }
+
+
 hal::v5::strong_ptr<hal::rotation_sensor> encoder() 
 {
   return timer2().acquire_quadrature_encoder(
@@ -200,6 +237,15 @@ hal::v5::strong_ptr<hal::rotation_sensor> wrist_encoder()
       5281);
   // TODO FIND THIS OUT
 }
+// hal::v5::strong_ptr<hal::rotation_sensor> encoder2() 
+// {
+//   return timer2().acquire_quadrature_encoder(
+//     driver_allocator(),
+//     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+//       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) }, 
+//       720); 
+//       //this is to just get the plain number of ticks, divided by two bc it reports both A and B channel
+// }
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {
   auto a_low = resources::pwm0_a8();

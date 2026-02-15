@@ -90,6 +90,11 @@ hal::v5::strong_ptr<hal::can_message_finder> can_finder(
   hal::v5::strong_ptr<hal::can_interrupt> can_interrupt();
 hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter();
 
+hal::v5::strong_ptr<hal::pwm> pwm_0(); 
+hal::v5::strong_ptr<hal::pwm> pwm_1(); 
+// hal::v5::strong_ptr<hal::output_pin> output_pa0(); 
+// hal::v5::strong_ptr<hal::output_pin> output_pa1(); 
+
 inline void reset()
 {
   hal::cortex_m::reset();
