@@ -50,6 +50,11 @@ auto& gpio_a()
   static hal::stm32f1::gpio<st_peripheral::gpio_a> gpio;
   return gpio;
 }
+auto& gpio_b()
+{
+  static hal::stm32f1::gpio<st_peripheral::gpio_b> gpio;
+  return gpio;
+}
 auto& gpio_c()
 {
   static hal::stm32f1::gpio<st_peripheral::gpio_c> gpio;
@@ -125,6 +130,12 @@ hal::v5::strong_ptr<hal::output_pin> rx1_a3()
   return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
                                                  std::move(pin));
 }
+hal::v5::strong_ptr<hal::output_pin> tx1_a2()
+{
+  auto pin = gpio_a().acquire_output_pin(2);
+  return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
+                                                 std::move(pin));
+}
 auto& timer3()
 {
   static hal::stm32f1::general_purpose_timer<st_peripheral::timer3> timer3{};
@@ -142,7 +153,6 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_0()
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
-
 hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1()
 {
   auto timer_pwm_channel =
@@ -150,43 +160,13 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1()
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
-
-hal::v5::strong_ptr<hal::pwm> pwm_0()
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_2()
 {
-  static auto timer_old_pwm =
-    timer2().acquire_pwm(hal::stm32f1::timer2_pin::pa0);
-  return hal::v5::make_strong_ptr<decltype(timer_old_pwm)>(
-    driver_allocator(), std::move(timer_old_pwm));
+  auto timer_pwm_channel =
+    timer3().acquire_pwm16_channel(hal::stm32f1::timer3_pin::pb0);
+  return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
+    driver_allocator(), std::move(timer_pwm_channel));
 }
-hal::v5::strong_ptr<hal::pwm> pwm_1()
-{
-  static auto timer_old_pwm =
-    timer2().acquire_pwm(hal::stm32f1::timer2_pin::pa1);
-  return hal::v5::make_strong_ptr<decltype(timer_old_pwm)>(
-    driver_allocator(), std::move(timer_old_pwm));
-}
-
-// hal::v5::optional_ptr<hal::output_pin> pa0_ptr;
-// hal::v5::strong_ptr<hal::output_pin> output_pa0()
-// {
-//   if(not pa0_ptr)
-//   {
-//     auto homing_pin = gpio_a().acquire_output_pin(0);
-//     pa0_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), gpio_a().acquire_output_pin(0));
-//   }
-//   return pa0_ptr;
-// }
-// hal::v5::optional_ptr<hal::output_pin> pa1_ptr;
-// hal::v5::strong_ptr<hal::output_pin> output_pa1()
-// {
-//   if(not pa0_ptr)
-//   {
-//     auto homing_pin = gpio_a().acquire_output_pin(1);
-//     pa1_ptr = hal::v5::make_strong_ptr<decltype(homing_pin)>(driver_allocator(), gpio_a().acquire_output_pin(1));
-//   }
-//   return pa1_ptr;
-// }
-
 
 hal::v5::strong_ptr<hal::rotation_sensor> encoder() 
 {
@@ -194,67 +174,22 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
     driver_allocator(),
     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-    // 5281 * 2 / 2);
-    // 5281 * 28 / 2);
-    753 / 2);
-  // shoulder 28, output shaft: 5281
-  // elbow 2, output shfat: 5281
-  // track 1, output_shaft: 753, 
-}*/
-hal::v5::strong_ptr<hal::rotation_sensor> track_encoder() 
-{
-  return timer2().acquire_quadrature_encoder(
-    driver_allocator(),
-    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-      753 / 2);
-  // track 1, output_shaft: 753, 
+      1); 
+      // returns ticks multiplied by 360 degrees 
+      // need to divide by ticks per rotation and gear ratio to get pure degrees or linear movement 
 }
-hal::v5::strong_ptr<hal::rotation_sensor> shoulder_encoder() 
-{
-  return timer2().acquire_quadrature_encoder(
-    driver_allocator(),
-    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-    5281 * 28 / 2);
-  // shoulder 28, output shaft: 5281
-}
-hal::v5::strong_ptr<hal::rotation_sensor> elbow_encoder() 
-{
-  return timer2().acquire_quadrature_encoder(
-    driver_allocator(),
-    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-      5281 * 2 / 2);
-  // elbow 2, output shfat: 5281
-}
-hal::v5::strong_ptr<hal::rotation_sensor> wrist_encoder() 
-{
-  return timer2().acquire_quadrature_encoder(
-    driver_allocator(),
-    { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
-      5281);
-  // TODO FIND THIS OUT
-}
-// hal::v5::strong_ptr<hal::rotation_sensor> encoder2() 
-// {
-//   return timer2().acquire_quadrature_encoder(
-//     driver_allocator(),
-//     { static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-//       static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) }, 
-//       720); 
-//       //this is to just get the plain number of ticks, divided by two bc it reports both A and B channel
-// }
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {
-  auto a_low = resources::pwm0_a8();
+  // auto a_low = resources::pwm0_a8();
   auto b_low = resources::rx1_a3();
+  auto c_low = resources::tx1_a2(); 
   hal::print(*console_ptr, "Acquired h-bridge low pins\n");
-  auto a_high = resources::pwm_channel_0();
+  // auto a_high = resources::pwm_channel_0();
   auto b_high = resources::pwm_channel_1();
+  auto c_high = resources::pwm_channel_2(); 
   hal::print(*console_ptr, "Acquired h-bridge high pins\n");
-  auto h_bridge = sjsu::drivers::h_bridge({ a_high, a_low }, { b_high, b_low });
+  // auto h_bridge = sjsu::drivers::h_bridge({ a_high, a_low }, { b_high, b_low });
+  auto h_bridge = sjsu::drivers::h_bridge({ c_high, c_low }, { b_high, b_low });
   return hal::v5::make_strong_ptr<decltype(h_bridge)>(
     resources::driver_allocator(), std::move(h_bridge));
 }

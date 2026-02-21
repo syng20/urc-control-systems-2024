@@ -27,13 +27,59 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .power = 0, 
     .velocity = 0,  
   };
-  m_target = { .position = 0, .power = 0.0f , .velocity = 0};
-  m_clamped_speed = 0.3;
-  m_prev_encoder_value = m_encoder->read().angle;
-  m_PID_prev_velocity_values = {.integral = 0, .last_error = 0, .prev_dt_time = 0.0 };
-  m_PID_prev_position_values = { .integral = 0,
-                                 .last_error = 0,
-                                 .prev_dt_time = 0.0 };
+  m_target = { 
+    .position = 0, 
+    .power = 0.0f , 
+    .velocity = 0
+  };
+  m_clamped_power = 0.3;
+  m_prev_encoder_value = bldc_perseus::read_angle();
+  m_PID_prev_velocity_values = {
+    .integral = 0, 
+    .last_error = 0, 
+    .prev_dt_time = 0.0 
+  };
+  m_PID_prev_position_values = { 
+    .integral = 0,              
+    .last_error = 0,
+    .prev_dt_time = 0.0 
+  };
+  // elbow 
+  m_servo_values = {
+    .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+    .feedforward_clamp = 0.2, 
+    .length = 0.4826, 
+    .angle_offset = -20, 
+    .weight_beam = 1000, 
+    .weight_end = 600 
+  }; 
+  // // shoulder 
+  // m_servo_values = {
+  //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
+  //   .feedforward_clamp = 0, 
+  //   .length = 0.5715, 
+  //   .angle_offset = -20, 
+  //   .weight_beam = 1600, 
+  //   .weight_end = 1600 
+  // }; 
+  // // wrist 
+  // m_servo_values = {
+  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
+  //   .feedforward_clamp = 0.2,
+  //   .length = 0.762, 
+  //   .angle_offset = 0, 
+  //   .weight_beam = 500, 
+  //   .weight_end = 100 
+  // }; 
+  // // track 
+  // m_servo_values = {
+  //   .gear_ratio = 8.35333, // 751.8 * 1 / 2 * 8 / 360
+  //   .feedforward_clamp = 0,
+  //   .length = 0, 
+  //   .angle_offset = 0, 
+  //   .weight_beam = 0, 
+  //   .weight_end = 0 
+  // }; 
 }
 
 void bldc_perseus::set_target_position(float target_position)
@@ -48,7 +94,7 @@ float bldc_perseus::get_target_position()
 
 float bldc_perseus::get_reading_position()
 {
-  m_reading.position = read_angle() / m_servo_values.gear_ratio;
+  m_reading.position = read_angle();
   return m_reading.position;
 }
 
@@ -120,7 +166,7 @@ void bldc_perseus::home_encoder()
 }
 
 hal::degrees bldc_perseus::read_angle() {
-  return m_encoder->read().angle; 
+  return m_encoder->read().angle / m_servo_values.gear_ratio; 
 }
 
 void bldc_perseus::update_velocity(int from_scratch) 

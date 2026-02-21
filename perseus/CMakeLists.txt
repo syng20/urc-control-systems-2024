@@ -18,15 +18,15 @@ project(demos LANGUAGES CXX)
 
 libhal_build_demos(
   DEMOS
-    # application
-    # can_test
-    # elbow_fig8
+    application
+    can_test
+    elbow_fig8
     encoder_values
-    # homing_test
-    # shoulder_fig8
-    # track_fig8
-    # track_move
-    # wristTest
+    homing_test
+    shoulder_fig8
+    track_fig8
+    track_move
+    wristTest
 
   INCLUDES
   ../drivers/include/
