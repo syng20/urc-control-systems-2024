@@ -21,13 +21,14 @@ libhal_build_demos(
 DEMOS
   color_sensor_demo
   led_strip_demo
-  h_bridge_demo
+  # h_bridge_demo
   pressure_sensor_demo
   scd40_demo
   soil_sensor_demo
   tla2528_output_pin_demo
   tla2528_input_pin_demo
   tla2528_analog_input_demo
+  triple_channel_pwm_demo
   serial_commands_demo
 
 INCLUDES

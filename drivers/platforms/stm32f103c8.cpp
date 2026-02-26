@@ -174,6 +174,25 @@ hal::v5::strong_ptr<hal::output_pin> output_pin_4()
     driver_allocator(), gpio_b().acquire_output_pin(12));
 }
 
+hal::v5::strong_ptr<hal::output_pin> pwm0_a8()
+{
+  auto pin = gpio_a().acquire_output_pin(8);
+  return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
+                                                 std::move(pin));
+}
+
+hal::v5::strong_ptr<hal::output_pin> rx1_a3()
+{
+  auto pin = gpio_a().acquire_output_pin(3);
+  return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
+                                                 std::move(pin));
+}
+hal::v5::strong_ptr<hal::output_pin> tx1_a2()
+{
+  auto pin = gpio_a().acquire_output_pin(2);
+  return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
+                                                 std::move(pin));
+}
 auto& timer1()
 {
   static hal::stm32f1::advanced_timer<st_peripheral::timer1> timer1{};
@@ -192,18 +211,45 @@ auto& timer3()
   return timer3;
 }
 
-hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_0()
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_0_h()
 {
   auto timer_pwm_channel =
     timer3().acquire_pwm16_channel(hal::stm32f1::timer3_pin::pa6);
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
-
-hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1()
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_0_l()
+{
+  auto timer_pwm_channel =
+    timer1().acquire_pwm16_channel(hal::stm32f1::timer1_pin::pa8);
+  return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
+    driver_allocator(), std::move(timer_pwm_channel));
+}
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1_h()
 {
   auto timer_pwm_channel =
     timer3().acquire_pwm16_channel(hal::stm32f1::timer3_pin::pa7);
+  return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
+    driver_allocator(), std::move(timer_pwm_channel));
+}
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_1_l()
+{
+  auto timer_pwm_channel =
+    timer2().acquire_pwm16_channel(hal::stm32f1::timer2_pin::pa3);
+  return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
+    driver_allocator(), std::move(timer_pwm_channel));
+}
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_2_h()
+{
+  auto timer_pwm_channel =
+    timer3().acquire_pwm16_channel(hal::stm32f1::timer3_pin::pb0);
+  return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
+    driver_allocator(), std::move(timer_pwm_channel));
+}
+hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_2_l()
+{
+  auto timer_pwm_channel =
+    timer2().acquire_pwm16_channel(hal::stm32f1::timer2_pin::pa2);
   return hal::v5::make_strong_ptr<decltype(timer_pwm_channel)>(
     driver_allocator(), std::move(timer_pwm_channel));
 }
