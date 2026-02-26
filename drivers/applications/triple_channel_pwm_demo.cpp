@@ -31,27 +31,39 @@ void application()
 
     hal::print(*console, "Triple phase GO...\n");
 
-    while (true) {
-        // reset
-        high_pin_a->duty_cycle(0.0f);
-        low_pin_a->duty_cycle(0.0f);
-        high_pin_b->duty_cycle(0.0f);
-        low_pin_b->duty_cycle(0.0f);
-        high_pin_c->duty_cycle(0.0f);
-        low_pin_c->duty_cycle(0.0f);
+    volatile float curr_time = 0; 
 
-        float constexpr two_pi = 2 * std::numbers::pi; 
-        float const step = 1.0f / two_pi;
-        float cy_a = 0; 
-        float cy_b = 0; 
-        float cy_c = 0; 
+    // reset
+    high_pin_a->duty_cycle(0.0f);
+    low_pin_a->duty_cycle(0.0f);
+    high_pin_b->duty_cycle(0.0f);
+    low_pin_b->duty_cycle(0.0f);
+    high_pin_c->duty_cycle(0.0f);
+    low_pin_c->duty_cycle(0.0f);
+
+    float constexpr two_pi = 2 * std::numbers::pi; 
+    float const step = 1.0f / two_pi;
+    float cy_a = 0; 
+    float cy_b = 0; 
+    float cy_c = 0; 
+    float r = clock->frequency(); 
+
+    while (true) {
+
+        curr_time = static_cast<float>(clock->uptime()); 
+        cy_a = sinf(curr_time * r); 
+        cy_b = sinf(curr_time * r + two_pi / 3); 
+        cy_a = sinf(curr_time * r - two_pi / 3); 
+
+
         for (float cycle_completion = 0; cycle_completion < two_pi; cycle_completion += step) {
             hal::print<64>(*console, ">> Cycle completion: %.2f \n", cycle_completion);
 
+            
             // sinf 
-            cy_a = sinf(cycle_completion); 
-            cy_b = sinf(cycle_completion + two_pi / 3); 
-            cy_c = sinf(cycle_completion - two_pi / 3); 
+            cy_a = sinf(curr_time * r); 
+            cy_b = sinf(curr_time * r + two_pi / 3); 
+            cy_a = sinf(curr_time * r - two_pi / 3); 
 
             // a pos or neg
             if (cy_a > 0) high_pin_a->duty_cycle(0x7FFE * cy_a); 
