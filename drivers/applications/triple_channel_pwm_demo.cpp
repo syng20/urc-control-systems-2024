@@ -42,7 +42,6 @@ void application()
     low_pin_c->duty_cycle(0.0f);
 
     float constexpr two_pi = 2 * std::numbers::pi; 
-    float const step = 1.0f / two_pi;
     float cy_a = 0; 
     float cy_b = 0; 
     float cy_c = 0; 
@@ -50,58 +49,57 @@ void application()
 
     while (true) {
 
+        // new vals 
         curr_time = static_cast<float>(clock->uptime()); 
         cy_a = sinf(curr_time * r); 
         cy_b = sinf(curr_time * r + two_pi / 3); 
         cy_a = sinf(curr_time * r - two_pi / 3); 
 
-
-        for (float cycle_completion = 0; cycle_completion < two_pi; cycle_completion += step) {
-            hal::print<64>(*console, ">> Cycle completion: %.2f \n", cycle_completion);
-
-            
-            // sinf 
-            cy_a = sinf(curr_time * r); 
-            cy_b = sinf(curr_time * r + two_pi / 3); 
-            cy_a = sinf(curr_time * r - two_pi / 3); 
-
-            // a pos or neg
-            if (cy_a > 0) high_pin_a->duty_cycle(0x7FFE * cy_a); 
-            else if (cy_a < 0) { 
-                cy_a = cy_a * -1; 
-                low_pin_a->duty_cycle(0x7FFE * cy_a);
-            }
-            else {
-                high_pin_a->duty_cycle(0x7FFE * cy_a);
-                low_pin_a->duty_cycle(0x7FFE * cy_a);
-            }
-            // b pos or neg 
-            if (cy_b > 0) high_pin_b->duty_cycle(0x7FFE * cy_b); 
-            else if (cy_b < 0) { 
-                cy_b = cy_b * -1; 
-                low_pin_b->duty_cycle(0x7FFE * cy_b);
-            }
-            else {
-                high_pin_b->duty_cycle(0x7FFE * cy_b);
-                low_pin_b->duty_cycle(0x7FFE * cy_b);
-            }
-            // c pos or neg 
-            if (cy_c > 0) high_pin_c->duty_cycle(0x7FFE * cy_c); 
-            else if (cy_c < 0) { 
-                cy_c = cy_c * -1; 
-                low_pin_c->duty_cycle(0x7FFE * cy_c);
-            }
-            else {
-                high_pin_c->duty_cycle(0x7FFE * cy_c);
-                low_pin_c->duty_cycle(0x7FFE * cy_c);
-            }
-
-            // high_pin_a->duty_cycle(0x7FFE * sinf(cycle_completion));
-            // high_pin_b->duty_cycle(0x7FFE * sinf(cycle_completion + two_pi / 3)); 
-            // high_pin_c->duty_cycle(0x7FFE * sinf(cycle_completion - two_pi / 3));
-
-            hal::delay(*clock, 10ms);
+        // a pos or neg
+        if (cy_a > 0) { 
+            high_pin_a->duty_cycle(0x7FFE * cy_a); 
+            low_pin_a->duty_cycle(0);
         }
+        else if (cy_a < 0) { 
+            low_pin_a->duty_cycle(0x7FFE * fabs(cy_a));
+            high_pin_a->duty_cycle(0); 
+        }
+        else {
+            high_pin_a->duty_cycle(0);
+            low_pin_a->duty_cycle(0);
+        }
+        // b pos or neg 
+        if (cy_b > 0) { 
+            high_pin_b->duty_cycle(0x7FFE * cy_b); 
+            low_pin_b->duty_cycle(0);
+        }
+        else if (cy_b < 0) { 
+            low_pin_b->duty_cycle(0x7FFE * fabs(cy_b));
+            high_pin_b->duty_cycle(0);
+        }
+        else {
+            high_pin_b->duty_cycle(0);
+            low_pin_b->duty_cycle(0);
+        }
+        // c pos or neg 
+        if (cy_c > 0) { 
+            high_pin_c->duty_cycle(0x7FFE * cy_c); 
+            low_pin_c->duty_cycle(0);
+        }
+        else if (cy_c < 0) { 
+            low_pin_c->duty_cycle(0x7FFE * fabs(cy_c));
+            high_pin_c->duty_cycle(0);
+        }
+        else {
+            high_pin_c->duty_cycle(0);
+            low_pin_c->duty_cycle(0);
+        }
+
+        // high_pin_a->duty_cycle(0x7FFE * sinf(cycle_completion));
+        // high_pin_b->duty_cycle(0x7FFE * sinf(cycle_completion + two_pi / 3)); 
+        // high_pin_c->duty_cycle(0x7FFE * sinf(cycle_completion - two_pi / 3));
+
+        hal::delay(*clock, 10ms);
 
         hal::print(*console, "From the top \n");
     }
