@@ -31,7 +31,7 @@ void application()
 
     hal::print(*console, "Triple phase GO...\n");
 
-    volatile float curr_time = 0; 
+    // volatile float curr_time = 0; 
 
     // reset
     high_pin_a->duty_cycle(0.0f);
@@ -45,15 +45,18 @@ void application()
     float cy_a = 0; 
     float cy_b = 0; 
     float cy_c = 0; 
-    float r = clock->frequency(); 
+    float r = 0.001; 
+    // float _prev_txime = curr_time; 
+    float dt = 0; 
 
     while (true) {
 
         // new vals 
-        curr_time = static_cast<float>(clock->uptime()); 
-        cy_a = sinf(curr_time * r); 
-        cy_b = sinf(curr_time * r + two_pi / 3); 
-        cy_a = sinf(curr_time * r - two_pi / 3); 
+        // curr_time = static_cast<float>(clock->uptime()); 
+        dt++; 
+        cy_a = sinf(dt * r); 
+        cy_b = sinf(dt * r + two_pi / 3); 
+        cy_c = sinf(dt * r - two_pi / 3); 
 
         // a pos or neg
         if (cy_a > 0) { 
@@ -99,9 +102,12 @@ void application()
         // high_pin_b->duty_cycle(0x7FFE * sinf(cycle_completion + two_pi / 3)); 
         // high_pin_c->duty_cycle(0x7FFE * sinf(cycle_completion - two_pi / 3));
 
-        hal::delay(*clock, 10ms);
+        //hal::print<64>(*console, "d(theta): %f \n", dt * r); 
+        // hal::delay(*clock, 1ms);
 
-        hal::print(*console, "From the top \n");
+        // _prev_time = curr_time + dt; 
+
+        // hal::print(*console, "From the top \n");
     }
 
 }
