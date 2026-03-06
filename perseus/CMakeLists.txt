@@ -29,6 +29,7 @@ SOURCES
     ../drivers/src/h_bridge.cpp
     src/bldc_servo.cpp
     ../drivers/src/serial_commands.cpp
+    src/can_messaging.cpp
     
 PACKAGES
     #Template for importing libhal packages is "libhal-__device__"
