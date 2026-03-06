@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include <bldc_servo.hpp>
+#include <can_messaging.hpp>
 #include <resource_list.hpp>
 
 using namespace std::chrono_literals;
@@ -120,6 +121,30 @@ float bldc_perseus::get_power() {
 void bldc_perseus::set_power(float power) {
   m_reading.power = power; 
   m_h_bridge->power(m_reading.power);
+}
+
+void bldc_perseus::freeze() {
+  bldc_perseus::PID_settings pos_saved = {
+    .kp = m_reading_position_settings.kp,
+    .ki = m_reading_position_settings.ki,
+    .kd = m_reading_position_settings.kd
+  };
+  bldc_perseus::PID_settings vel_saved = {
+    .kp = m_reading_velocity_settings.kp,
+    .ki = m_reading_velocity_settings.ki,
+    .kd = m_reading_velocity_settings.kd
+  };
+  bldc_perseus::PID_settings hard_stop = {
+    .kp = 0,
+    .ki = 0,
+    .kd = 0
+  };
+  update_pid_position(hard_stop);
+  // SET FOR ELBOW RIGHT NOW
+  // FIX FOR OTHERS
+  update_position(1); 
+  update_pid_position(pos_saved); 
+  update_pid_position(vel_saved); 
 }
 
 void bldc_perseus::stop()

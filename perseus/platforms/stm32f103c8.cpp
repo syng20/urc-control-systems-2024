@@ -29,7 +29,6 @@
 #include <libhal-util/serial.hpp>
 #include <libhal/output_pin.hpp>
 #include <libhal/pointers.hpp>
-
 #include <resource_list.hpp>
 
 
