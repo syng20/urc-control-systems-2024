@@ -49,6 +49,7 @@ public:
     float fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent); 
     hal::u16 floating_to_fixed_point(float n, int exponent); 
     void process_can_message(hal::can_message const& p_message,
+        hal::u16 servo_addr, 
         hal::v5::strong_ptr<bldc_perseus> bldc,
         hal::v5::strong_ptr<hal::can_message> response);
 

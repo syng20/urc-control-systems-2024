@@ -17,6 +17,12 @@ can_perseus::can_perseus(hal::u16 curr_servo_addr) : m_curr_servo_addr(curr_serv
 
 // decode message from mission control 
 float can_perseus::fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent) {
+  auto console = resources::console();
+  hal::u16 temp = (msb << 8) | lsb;
+  hal::print<64>(*console, "Before Exponent: %x\n", temp); 
+  temp = temp >> exponent; 
+  hal::print<64>(*console, "After Exponent: %x\n", temp); 
+  hal::print<64>(*console, "As Float: %f\n", static_cast<float>(((msb << 8) | lsb) >> exponent)); 
   return static_cast<float>(((msb << 8) | lsb) >> exponent); 
 }
 
@@ -47,34 +53,26 @@ void can_perseus::print_can_message(hal::serial& p_console,
 }
 
 void can_perseus::process_can_message(hal::can_message const& p_message,
+                        hal::u16 servo_addr, 
                         hal::v5::strong_ptr<bldc_perseus> bldc,
                         hal::v5::strong_ptr<hal::can_message> response)
 {   
   auto console = resources::console();
   switch (static_cast<action>(p_message.payload[0])) {
-    // case action::read_position: {
-    //   auto current_position = bldc->get_current_position();
-    //   response->length = 3;
-    //   response->payload[0] =
-    //     static_cast<hal::byte>(action::read_position) + 0x50;
-    //   response->payload[1] = (current_position >> 8) & 0xff;
-    //   response->payload[1] = current_position & 0xff;
-    //   break;
-    // }
     case action::freeze:{
       bldc->freeze(); 
       bldc->set_current_action(static_cast<hal::u16>(action::freeze)); 
       break;
     }
     case action::heartbeat: {
-      response->id = static_cast<hal::byte>(action::heartbeat) + 0x100;
+      response->id = servo_addr + 0x100;
       response->length = 1;
       response->payload[0] = m_curr_servo_addr + 0x50;
       bldc->set_current_action(static_cast<hal::u16>(action::heartbeat)); 
       break; 
     }
     case action::homing: {
-      response->id = static_cast<hal::byte>(action::homing) + 0x100;
+      response->id = servo_addr + 0x100;
       response->length = 1;
       response->payload[0] = 0x01;
       response->payload[1] = 0x11;
@@ -82,19 +80,19 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       break; 
     }
     case action::set_position: {
-      auto target_position = fixed_to_floating_point(p_message.payload[1], p_message.payload[2], 6);
+      float target_position = fixed_to_floating_point(p_message.payload[1], p_message.payload[2], 6);
       bldc->set_target_position(target_position);
-      hal::print<64>(*console, "Target = %d\n", target_position);
-      response->id = static_cast<hal::byte>(action::set_position) + 0x100;
+      hal::print<64>(*console, "Target = %f\n", target_position);
+      response->id = servo_addr + 0x100;
       response->length = 1;
       response->payload[0] = static_cast<hal::byte>(action::set_position) + 0x50;;
       bldc->set_current_action(static_cast<hal::u16>(action::set_position)); 
       break;
     }
     case action::read_position: {
-      auto reading_position = bldc->get_reading_position();
+      float reading_position = bldc->get_reading_position();
       hal::u16 t = can_perseus::floating_to_fixed_point(reading_position, 6); 
-      response->id = static_cast<hal::byte>(action::read_position) + 0x100;
+      response->id = servo_addr + 0x100;
       response->length = 8;
       response->payload[0] = 0x20 + 0x50; 
       response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -103,9 +101,9 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       break;
     }
     case action::read_velocity: {
-      auto reading_velocity = bldc->get_reading_velocity();
+      float reading_velocity = bldc->get_reading_velocity();
       hal::u16 t = can_perseus::floating_to_fixed_point(reading_velocity, 6); 
-      response->id = static_cast<hal::byte>(action::read_velocity) + 0x100;
+      response->id = servo_addr + 0x100;
       response->length = 8;
       response->payload[0] = 0x20 + 0x50; 
       response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -120,7 +118,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
         .kd = fixed_to_floating_point(p_message.payload[5], p_message.payload[6], 14)
       };
       bldc->update_pid_position(settings);
-      response->id = static_cast<hal::byte>(action::set_pid_position) + 0x100;
+      response->id = servo_addr + 0x100;
       response->length = 1;
       response->payload[0] = static_cast<hal::byte>(action::set_pid_position) + 0x50;
       bldc->set_current_action(static_cast<hal::u16>(action::set_pid_position)); 
@@ -133,7 +131,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
         .kd = fixed_to_floating_point(p_message.payload[5], p_message.payload[6], 14)
       };
       bldc->update_pid_velocity(settings);
-      response->id = static_cast<hal::byte>(action::set_pid_velocity) + 0x100;
+      response->id = servo_addr + 0x100;
       response->length = 1;
       response->payload[0] = static_cast<hal::byte>(action::set_pid_velocity) + 0x50;
       bldc->set_current_action(static_cast<hal::u16>(action::set_pid_velocity)); 

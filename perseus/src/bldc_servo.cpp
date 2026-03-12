@@ -221,7 +221,9 @@ void bldc_perseus::update_position(int from_scratch)
   float error = m_target.position - m_reading.position;
   sec curr_time = hal_time_duration_to_sec(get_clock_time(*m_clock));
   sec dt = curr_time - m_PID_prev_position_values.prev_dt_time;
-  if (from_scratch) m_PID_prev_position_values.integral = 0; 
+  if (from_scratch) { 
+    m_PID_prev_position_values.integral = 0; 
+  }
   m_PID_prev_position_values.integral += error * dt; 
   float derivative = (error - m_PID_prev_position_values.last_error) / dt; 
   float pTerm = m_reading_position_settings.kp * error; 
@@ -244,6 +246,8 @@ void bldc_perseus::update_position(int from_scratch)
   }
   m_reading.power = projected_power; 
   m_h_bridge->power(m_reading.power);
+  auto console = resources::console(); 
+  hal::print<64>(*console, "Projected Power = %f\n", projected_power);
 }
 
 // use actual position here once can be communicated/calculated via can 
