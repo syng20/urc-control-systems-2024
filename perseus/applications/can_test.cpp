@@ -84,13 +84,10 @@ void application()
     hal::print<64>(
       *console, "Can message with id = 0x%lX from interrupt!\n", p_message.id);
   });
-
+  
   hal::print<32>(*console,
                  "Receiver buffer size = %zu\n",
                  can_transceiver->receive_buffer().size());
-
-
-//   constexpr auto allowed_id = servo_address;
   hal::can_message_finder message_finder(*can_transceiver, allowed_id);
   auto message_finder_pointer = hal::v5::make_strong_ptr<hal::can_message_finder>(resources::driver_allocator(), hal::can_message_finder(*can_transceiver, allowed_id));
   can_id_filter->allow(allowed_id);
