@@ -21,35 +21,11 @@ float can_perseus::fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exp
   auto console = resources::console();
   hal::i16 initial = (msb << 8) | lsb;
   hal::print<64>(*console, "pure_binary: %x -- ", initial); 
-  float shifted = static_cast<float>(initial) / pow(2, exponent);
+  float shifted = initial / powf(2, exponent); 
   hal::print<64>(*console, "float cast: %x\n", shifted); 
   return shifted; 
 
   // return static_cast<float>(static_cast<hal::i16>((msb << 8) | lsb)) / pow(2, exponent); 
-
-  // hal::u16 pure_binary = (msb << 8) | lsb;
-  // hal::u32 binary_float = static_cast<hal::u32>(exponent) << 23; 
-  // hal::print<64>(*console, "bf: %x\n", binary_float); 
-  // if ((pure_binary & 0x80) != 0) {
-  //   binary_float = binary_float | 0x80000000; 
-  //   pure_binary = ~pure_binary + 1; 
-  // }
-  // binary_float = binary_float | pure_binary; 
-  // hal::print<64>(*console, "Before float: %x\n", binary_float); 
-  // return static_cast<float>(binary_float); 
-
-
-  // float float_og_num = static_cast<float>(og_bin); 
-  // // hal::print<64>(*console, "Before Exponent: %x\n", temp); 
-  // // temp = temp >> exponent; 
-  // // hal::print<64>(*console, "After Exponent: %x\n", temp); 
-  // // hal::print<64>(*console, "As Float: %f\n", static_cast<float>(((msb << 8) | lsb) >> exponent)); 
-  // if ((og_bin & 0x80) != 0) {
-  //   og_bin = ~(0xFF00 | og_bin) + 0x01; 
-  //   float_og_num = static_cast<float>(og_bin) * -1; 
-  // }
-  // hal::print<64>(*console, "Hexs: %x\n", og_bin); 
-  // return float_og_num; 
 }
 
 // endcode message to mission control 
