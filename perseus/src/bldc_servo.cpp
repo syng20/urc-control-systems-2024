@@ -246,8 +246,6 @@ void bldc_perseus::update_position(int from_scratch)
   }
   m_reading.power = projected_power; 
   m_h_bridge->power(m_reading.power);
-  auto console = resources::console(); 
-  hal::print<64>(*console, "Projected Power = %f\n", projected_power);
 }
 
 // use actual position here once can be communicated/calculated via can 
