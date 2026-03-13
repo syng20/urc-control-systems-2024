@@ -114,6 +114,10 @@ float bldc_perseus::get_reading_velocity()
   return m_reading.velocity;
 }
 
+float bldc_perseus::get_power() {
+  return m_reading.power;
+}
+
 void bldc_perseus::set_power(float power) {
   m_h_bridge->power(power);
 }
