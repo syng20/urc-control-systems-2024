@@ -95,20 +95,34 @@ void application()
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", allowed_id);
 
 
-//   hal::can_message response{
-//     .id = 0x333,
-//     .extended=false,
-//     .remote_request=false,
-//     .length = 0,
-//     .payload = {},
-//   };
+  //  hal::can_message spam_message{
+  //    .id = 0x333,
+  //    .extended=false,
+  //    .remote_request=false,
+  //    .length = 3,
+  //    .payload = {0x12,0x23,0x38},
+  //  };
+
+  //  hal::can_message na_message{
+  //    .id = 0x333,
+  //    .extended=false,
+  //    .remote_request=false,
+  //    .length = 3,
+  //    .payload = {0xaa,0xbb,0xcc},
+  // };
   
   volatile hal::u16 action = 0x00;
 
+  int yepyep = 0; 
+
+  // message_finder.transceiver().send(spam_message);
+
   while (true) {
+    // message_finder.transceiver().send(spam_message);
     
     // received and response 
     auto msg = message_finder.find();
+
     
     // if message found 
     if (msg) {
@@ -117,25 +131,60 @@ void application()
       auto response = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
       servo_can.can_perseus::process_can_message(*msg, allowed_id, servo_ptr, response); 
       // send response 
-      message_finder.transceiver().send(*response);
+      // message_finder.transceiver().send(*response);
       print_can_message(*console, *response);
       hal::print<64>(*console, "finished transmission\n");
       // set action 
       action = servo_ptr->bldc_perseus::get_current_action(); 
       hal::print<64>(*console, "Action: %x \n", action);
+      // yepyep = 1;
     }
+    else {
+      hal::print<64>(*console, "Beepbeep: %x \n", action);
+    }
+
+    // if (yepyep == 1) hal::print(*console, "FROZEN \n");
+
+// /*
 
     // action continuation 
     // 0x12 = update position 
     if (action == 0x12) { 
+      if (yepyep == 0) { 
+        servo_ptr->update_position(1); 
+        hal::print(*console, "From Scratch = 1 \n");
+        yepyep = 1; 
+      }
       servo_ptr->update_position(0); 
-      if (fabs(fabs(servo_ptr->get_reading_position()) - fabs(servo_ptr->get_target_position())) < 1.5) {
+      hal::print(*console, "From Scratch = 0 \n");
+      float d = fabs(fabs(servo_ptr->get_reading_position()) - fabs(servo_ptr->get_target_position())); 
+      if (d < 1.5) {
         servo_ptr->freeze(); 
         servo_ptr->bldc_perseus::set_current_action(0x00); 
-        hal::print<64>(*console, "FROZEN \n");
+        hal::print<64>(*console, "FROZEN %.2f\n", d);
         action = 0; 
+        break; 
       }
+      else {
+        hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
+      }
+      // servo_ptr->set_power(-0.3); 
+      // hal::print<64>(*console, "Power: %f \n", servo_ptr->get_power());
+      // hal::delay(*clock, 100ms);
     } 
+    else {
+      hal::print<64>(*console, "Nopnop: %x \n", action);
+    }
+    // servo_ptr->set_power(0.3);
+    // // print_can_message(*console, spam_message);
+    // hal::delay(*clock, 1000ms);
+    // // can needs common ground? 
+    // // if usb not connected, nothing runs --> possible power issue?
+    
+// */
+    // servo_ptr->set_power(-0.3);
+    // hal::delay(*clock, 100ms);
+
 
   }
   
