@@ -21,6 +21,32 @@ namespace sjsu::perseus {
 // 188:1 elbow 1-2 reduction. 5281.1 * 2
 void application()
 {
-  // TODO!
+  using namespace hal::literals;
+  using namespace std::chrono_literals;
+  // auto pwm_pin = resources::pwm_pin(); 
+  // pwm_pin->level(false); 
+
+  // gen
+  auto clock = resources::clock();
+  auto console = resources::console();
+  // bldc
+  auto h_bridge = resources::h_bridge();
+  auto encoder = resources::encoder();
+  bldc_perseus servo(h_bridge, encoder);
+  hal::print(*console, "BLDC Servo created...\n");
+  auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
+  
+  while(true) {
+  
+    servo_ptr->set_power(0.3); 
+    hal::delay(*clock, 5000ms);
+    hal::print(*console, "Switch -0.3\n");
+    servo_ptr->set_power(-0.3); 
+    hal::delay(*clock, 5000ms);
+    hal::print(*console, "Switch 0.3\n");
+  
+
+  }
+
 }
 }  // namespace sjsu::perseus
