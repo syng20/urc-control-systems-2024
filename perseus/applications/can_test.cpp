@@ -43,6 +43,50 @@ void print_can_message(hal::serial& p_console,
   hal::print(p_console, "]\n}\n");
 }
 
+void action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
+                        uint32_t action
+                      )
+{   
+  auto console = resources::console();
+  switch (static_cast<can_perseus::action>(action)) {
+    case can_perseus::action::freeze: {
+      // no action
+      break;
+    }
+    case can_perseus::action::heartbeat: {
+      // no action
+      break; 
+    }
+    case can_perseus::action::homing: {
+      bldc->home_encoder(); 
+      break; 
+    }
+    case can_perseus::action::set_position: {
+      bldc->update_position(0); 
+      break;
+    }
+    case can_perseus::action::read_position: {
+      // no action
+      break;
+    }
+    case can_perseus::action::read_velocity: {
+      // no action
+      break;
+    }
+    case can_perseus::action::set_pid_position: {
+      // no action 
+      break;
+    }
+    case can_perseus::action::set_pid_velocity: {
+      // no action
+      break;
+    }
+    default:
+      hal::operation_not_supported(nullptr);
+  }
+}
+
+
 // each rotation of the output shaft of the track servo is 8 mm of linear travel
 // so 1 degree of rotation is 8mm / 360 = 0.0222 mm of linear travel
 // 188:1 is for shoulder servo 5281.1 * 28
@@ -113,7 +157,7 @@ void application()
   
   volatile hal::u16 action = 0x00;
 
-  int yepyep = 0; 
+  // int yepyep = 0; 
 
   // message_finder.transceiver().send(spam_message);
 
@@ -143,9 +187,10 @@ void application()
       hal::print<64>(*console, "Beepbeep: %x \n", action);
     }
 
-    // if (yepyep == 1) hal::print(*console, "FROZEN \n");
+    // continue action if necessary 
+    action_loop(servo_ptr, action); 
 
-// /*
+/*
 
     // action continuation 
     // 0x12 = update position 
@@ -181,7 +226,7 @@ void application()
     // // can needs common ground? 
     // // if usb not connected, nothing runs --> possible power issue?
     
-// */
+*/
     // servo_ptr->set_power(-0.3);
     // hal::delay(*clock, 100ms);
 
