@@ -123,6 +123,14 @@ void bldc_perseus::set_power(float power) {
   m_h_bridge->power(m_reading.power);
 }
 
+void bldc_perseus::set_reading_action(uint32_t action) {
+  m_reading_action = action; 
+} 
+  
+uint32_t bldc_perseus::get_reading_action() {
+  return m_reading_action; 
+}
+
 void bldc_perseus::freeze() {
   bldc_perseus::PID_settings pos_saved = {
     .kp = m_reading_position_settings.kp,

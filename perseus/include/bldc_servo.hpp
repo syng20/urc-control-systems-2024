@@ -200,13 +200,13 @@ public:
     * @brief Set the servo's current action 
     * @param action can_perseus::action value to be set 
   */
-  void set_current_action(hal::u16 action); 
+  void set_reading_action(uint32_t action); 
   
   /**
     * @brief Get the servo's current action 
     * @return Returns the current action as a can_perseus::action 
   */
-  hal::u16 get_current_action(); 
+  uint32_t get_reading_action(); 
 
   /**
    * @brief Resets the internal time tracking for the servo, this will be done
@@ -252,7 +252,7 @@ private:
   float m_clamped_power;
   float m_prev_encoder_value;
   float home_encoder_value;
-  hal::u16 m_current_action; 
+  uint32_t m_reading_action; 
 };
 
 }  // namespace sjsu::perseus

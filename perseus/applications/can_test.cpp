@@ -42,10 +42,11 @@ void print_can_message(hal::serial& p_console,
 
   hal::print(p_console, "]\n}\n");
 }
-
+/*
 void action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
-                        uint32_t action
-                      )
+                        hal::v5::strong_ptr<can_perseus> servo_can,
+                        hal::v5::strong_ptr<hal::can_message> response,
+                        uint32_t action)
 {   
   auto console = resources::console();
   switch (static_cast<can_perseus::action>(action)) {
@@ -63,6 +64,11 @@ void action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
     }
     case can_perseus::action::set_position: {
       bldc->update_position(0); 
+      // hal::u16 t = servo_can->can_perseus::floating_to_fixed_point(bldc->get_reading_position(), 6); 
+      // response->length = 8;
+      // response->payload[0] = 0x20 + 0x50; 
+      // response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      // response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
       break;
     }
     case can_perseus::action::read_position: {
@@ -85,6 +91,7 @@ void action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
       hal::operation_not_supported(nullptr);
   }
 }
+*/
 
 
 // each rotation of the output shaft of the track servo is 8 mm of linear travel
@@ -118,7 +125,7 @@ void application()
 
 
   // Change the CAN baudrate here.
-  static constexpr auto baudrate = 100.0_kHz;
+  static constexpr auto baudrate = 1_MHz;
 
   hal::print(*console, "CAN IT\n");
 
@@ -138,7 +145,7 @@ void application()
   hal::print<64>(
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", allowed_id);
 
-
+/*
   //  hal::can_message spam_message{
   //    .id = 0x333,
   //    .extended=false,
@@ -154,10 +161,11 @@ void application()
   //    .length = 3,
   //    .payload = {0xaa,0xbb,0xcc},
   // };
+*/
   
-  volatile hal::u16 action = 0x00;
+  volatile uint32_t action = 0x00;
 
-  // int yepyep = 0; 
+  int yepyep = 0; 
 
   // message_finder.transceiver().send(spam_message);
 
@@ -167,6 +175,7 @@ void application()
     // received and response 
     auto msg = message_finder.find();
 
+      
     
     // if message found 
     if (msg) {
@@ -179,18 +188,18 @@ void application()
       print_can_message(*console, *response);
       hal::print<64>(*console, "finished transmission\n");
       // set action 
-      action = servo_ptr->bldc_perseus::get_current_action(); 
+      action = servo_ptr->bldc_perseus::get_reading_action(); 
       hal::print<64>(*console, "Action: %x \n", action);
       // yepyep = 1;
     }
     else {
-      hal::print<64>(*console, "Beepbeep: %x \n", action);
+      // hal::print<64>(*console, "Beepbeep: %x \n", action);
     }
 
     // continue action if necessary 
-    action_loop(servo_ptr, action); 
+    // action_loop(servo_ptr, servo_can, response, action);
 
-/*
+
 
     // action continuation 
     // 0x12 = update position 
@@ -205,7 +214,7 @@ void application()
       float d = fabs(fabs(servo_ptr->get_reading_position()) - fabs(servo_ptr->get_target_position())); 
       if (d < 1.5) {
         servo_ptr->freeze(); 
-        servo_ptr->bldc_perseus::set_current_action(0x00); 
+        servo_ptr->bldc_perseus::set_reading_action(0x00); 
         hal::print<64>(*console, "FROZEN %.2f\n", d);
         action = 0; 
         break; 
@@ -218,7 +227,7 @@ void application()
       // hal::delay(*clock, 100ms);
     } 
     else {
-      hal::print<64>(*console, "Nopnop: %x \n", action);
+      // hal::print<64>(*console, "Nopnop: %x \n", action);
     }
     // servo_ptr->set_power(0.3);
     // // print_can_message(*console, spam_message);
@@ -226,7 +235,7 @@ void application()
     // // can needs common ground? 
     // // if usb not connected, nothing runs --> possible power issue?
     
-*/
+
     // servo_ptr->set_power(-0.3);
     // hal::delay(*clock, 100ms);
 
