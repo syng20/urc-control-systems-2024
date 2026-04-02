@@ -42,56 +42,54 @@ void print_can_message(hal::serial& p_console,
 
   hal::print(p_console, "]\n}\n");
 }
-/*
-void action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
-                        hal::v5::strong_ptr<can_perseus> servo_can,
+
+bool action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
+                        hal::v5::strong_ptr<can_perseus> can,
                         hal::v5::strong_ptr<hal::can_message> response,
-                        uint32_t action)
+                        uint32_t action, 
+                        bool new_action, 
+                        int delay_counter)
 {   
+  bool send = false; 
   auto console = resources::console();
   switch (static_cast<can_perseus::action>(action)) {
-    case can_perseus::action::freeze: {
-      // no action
-      break;
-    }
-    case can_perseus::action::heartbeat: {
-      // no action
-      break; 
-    }
     case can_perseus::action::homing: {
       bldc->home_encoder(); 
+      if (delay_counter >= 10) {
+        delay_counter = 0; 
+        hal::u16 t = can->can_perseus::floating_to_fixed_point(bldc->get_reading_position(), 6); 
+        response->length = 8;
+        response->payload[0] = 0x20 + 0x50; 
+        response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+        response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+        send = true; 
+      }
       break; 
     }
     case can_perseus::action::set_position: {
-      bldc->update_position(0); 
-      // hal::u16 t = servo_can->can_perseus::floating_to_fixed_point(bldc->get_reading_position(), 6); 
-      // response->length = 8;
-      // response->payload[0] = 0x20 + 0x50; 
-      // response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-      // response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-      break;
-    }
-    case can_perseus::action::read_position: {
-      // no action
-      break;
-    }
-    case can_perseus::action::read_velocity: {
-      // no action
-      break;
-    }
-    case can_perseus::action::set_pid_position: {
-      // no action 
-      break;
-    }
-    case can_perseus::action::set_pid_velocity: {
-      // no action
+      if (new_action) {
+        bldc->update_position(1); 
+      }
+      else {
+        bldc->update_position(0); 
+      }
+      if (delay_counter >= 10) {
+        delay_counter = 0; 
+        hal::u16 t = can->can_perseus::floating_to_fixed_point(bldc->get_reading_position(), 6); 
+        response->length = 8;
+        response->payload[0] = 0x20 + 0x50; 
+        response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+        response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+        send = true; 
+      }
       break;
     }
     default:
-      hal::operation_not_supported(nullptr);
+      break; 
   }
+  return send; 
 }
-*/
+
 
 
 // each rotation of the output shaft of the track servo is 8 mm of linear travel
@@ -121,6 +119,7 @@ void application()
   // can pt2
   constexpr servo_address allowed_id = elbow_servo; 
   can_perseus servo_can(allowed_id); 
+  auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
   hal::print(*console, "Servo can creature setup...\n");
 
 
@@ -165,42 +164,43 @@ void application()
   
   volatile uint32_t action = 0x00;
 
-  int yepyep = 0; 
-
-  // message_finder.transceiver().send(spam_message);
+  bool new_action = false; 
+  int delay_counter = 0; 
 
   while (true) {
-    // message_finder.transceiver().send(spam_message);
-    
+     
     // received and response 
     auto msg = message_finder.find();
-
-      
     
     // if message found 
     if (msg) {
       // process message 
       print_can_message(*console, *msg);
       auto response = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
-      servo_can.can_perseus::process_can_message(*msg, allowed_id, servo_ptr, response); 
+      can_ptr->can_perseus::process_can_message(*msg, allowed_id, servo_ptr, response); 
       // send response 
-      // message_finder.transceiver().send(*response);
+      message_finder.transceiver().send(*response);
       print_can_message(*console, *response);
       hal::print<64>(*console, "finished transmission\n");
       // set action 
       action = servo_ptr->bldc_perseus::get_reading_action(); 
       hal::print<64>(*console, "Action: %x \n", action);
-      // yepyep = 1;
-    }
-    else {
-      // hal::print<64>(*console, "Beepbeep: %x \n", action);
+      new_action = true;
     }
 
     // continue action if necessary 
-    // action_loop(servo_ptr, servo_can, response, action);
+    auto response_c = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
+    if (action_loop(servo_ptr, can_ptr, response_c, action, new_action, delay_counter) == true) {
+      message_finder.transceiver().send(*response_c);
+      print_can_message(*console, *response_c);
+      hal::print<64>(*console, "finished transmission\n");
+    }
 
+    new_action = false; 
+    delay_counter++; 
+    hal::delay(*clock, 100ms); 
 
-
+/*
     // action continuation 
     // 0x12 = update position 
     if (action == 0x12) { 
@@ -222,23 +222,8 @@ void application()
       else {
         hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
       }
-      // servo_ptr->set_power(-0.3); 
-      // hal::print<64>(*console, "Power: %f \n", servo_ptr->get_power());
-      // hal::delay(*clock, 100ms);
     } 
-    else {
-      // hal::print<64>(*console, "Nopnop: %x \n", action);
-    }
-    // servo_ptr->set_power(0.3);
-    // // print_can_message(*console, spam_message);
-    // hal::delay(*clock, 1000ms);
-    // // can needs common ground? 
-    // // if usb not connected, nothing runs --> possible power issue?
-    
-
-    // servo_ptr->set_power(-0.3);
-    // hal::delay(*clock, 100ms);
-
+*/
 
   }
   
