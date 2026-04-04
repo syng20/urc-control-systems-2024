@@ -161,6 +161,21 @@ void application()
   //    .payload = {0xaa,0xbb,0xcc},
   // };
 */
+
+  // elbow
+  bldc_perseus::PID_settings pid_settings = {
+    .kp = 0.05,
+    .ki = 0.015, 
+    .kd = 0.005,
+  };
+  // // shoulder
+  // bldc_perseus::PID_settings pid_settings = {
+  //   .kp = 5.0,
+  //   .ki = 0.01,
+  //   .kd = 0.00,
+  // };
+  servo_ptr->update_pid_position(pid_settings);
+  
   
   volatile uint32_t action = 0x00;
 
@@ -185,20 +200,8 @@ void application()
       // set action 
       action = servo_ptr->bldc_perseus::get_reading_action(); 
       hal::print<64>(*console, "Action: %x \n", action);
-      new_action = true;
+      yepyep = 1;
     }
-
-    // continue action if necessary 
-    auto response_c = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
-    if (action_loop(servo_ptr, can_ptr, response_c, action, new_action, delay_counter) == true) {
-      message_finder.transceiver().send(*response_c);
-      print_can_message(*console, *response_c);
-      hal::print<64>(*console, "finished transmission\n");
-    }
-
-    new_action = false; 
-    delay_counter++; 
-    hal::delay(*clock, 100ms); 
 
 /*
     // action continuation 
@@ -212,18 +215,13 @@ void application()
       servo_ptr->update_position(0); 
       hal::print(*console, "From Scratch = 0 \n");
       float d = fabs(fabs(servo_ptr->get_reading_position()) - fabs(servo_ptr->get_target_position())); 
-      if (d < 1.5) {
-        servo_ptr->freeze(); 
-        servo_ptr->bldc_perseus::set_reading_action(0x00); 
-        hal::print<64>(*console, "FROZEN %.2f\n", d);
-        action = 0; 
-        break; 
-      }
-      else {
-        hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
-      }
+      
+      hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
+      hal::delay(*clock, 100ms);
+      
     } 
-*/
+    
+
 
   }
   

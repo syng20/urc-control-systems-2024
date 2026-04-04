@@ -38,13 +38,15 @@ void application()
   
   while(true) {
   
-    servo_ptr->set_power(0.3); 
-    hal::delay(*clock, 5000ms);
-    hal::print(*console, "Switch -0.3\n");
-    servo_ptr->set_power(-0.3); 
-    hal::delay(*clock, 5000ms);
-    hal::print(*console, "Switch 0.3\n");
+    // servo_ptr->set_power(0.3); 
+    // hal::delay(*clock, 5000ms);
+    // hal::print(*console, "Switch -0.3\n");
+    // servo_ptr->set_power(-0.3); 
+    // hal::delay(*clock, 5000ms);
+    // hal::print(*console, "Switch 0.3\n");
   
+    hal::print<64> (*console, "position: %f\n", servo_ptr->get_reading_position());
+    hal::delay(*clock,100ms);
 
   }
 
