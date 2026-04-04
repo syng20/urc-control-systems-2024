@@ -219,6 +219,7 @@ hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
 // position 
 void bldc_perseus::update_position(bool from_scratch) 
 {
+  auto console = resources::console(); 
   // pid portion
   m_reading.position = bldc_perseus::read_angle();
   float error = m_target.position - m_reading.position;
@@ -247,6 +248,7 @@ void bldc_perseus::update_position(bool from_scratch)
   else { 
     projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power);
   }
+    hal::print<64>(*console, "Error: %f, pid: %f, projected: %f\n", error, pid_sum, projected_power); 
   m_reading.power = projected_power; 
   m_h_bridge->power(m_reading.power);
 }

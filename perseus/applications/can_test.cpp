@@ -162,6 +162,21 @@ void application()
   //    .payload = {0xaa,0xbb,0xcc},
   // };
 */
+
+  // elbow
+  bldc_perseus::PID_settings pid_settings = {
+    .kp = 0.05,
+    .ki = 0.015, 
+    .kd = 0.005,
+  };
+  // // shoulder
+  // bldc_perseus::PID_settings pid_settings = {
+  //   .kp = 5.0,
+  //   .ki = 0.01,
+  //   .kd = 0.00,
+  // };
+  servo_ptr->update_pid_position(pid_settings);
+  
   
   volatile uint32_t action = 0x00;
 
@@ -190,16 +205,8 @@ void application()
       // set action 
       action = servo_ptr->bldc_perseus::get_reading_action(); 
       hal::print<64>(*console, "Action: %x \n", action);
-      // yepyep = 1;
+      yepyep = 1;
     }
-    else {
-      // hal::print<64>(*console, "Beepbeep: %x \n", action);
-    }
-
-    // continue action if necessary 
-    // action_loop(servo_ptr, servo_can, response, action);
-
-
 
     // action continuation 
     // 0x12 = update position 
@@ -212,32 +219,12 @@ void application()
       servo_ptr->update_position(0); 
       hal::print(*console, "From Scratch = 0 \n");
       float d = fabs(fabs(servo_ptr->get_reading_position()) - fabs(servo_ptr->get_target_position())); 
-      if (d < 1.5) {
-        servo_ptr->freeze(); 
-        servo_ptr->bldc_perseus::set_reading_action(0x00); 
-        hal::print<64>(*console, "FROZEN %.2f\n", d);
-        action = 0; 
-        break; 
-      }
-      else {
-        hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
-      }
-      // servo_ptr->set_power(-0.3); 
-      // hal::print<64>(*console, "Power: %f \n", servo_ptr->get_power());
-      // hal::delay(*clock, 100ms);
+      
+      hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
+      hal::delay(*clock, 100ms);
+      
     } 
-    else {
-      // hal::print<64>(*console, "Nopnop: %x \n", action);
-    }
-    // servo_ptr->set_power(0.3);
-    // // print_can_message(*console, spam_message);
-    // hal::delay(*clock, 1000ms);
-    // // can needs common ground? 
-    // // if usb not connected, nothing runs --> possible power issue?
     
-
-    // servo_ptr->set_power(-0.3);
-    // hal::delay(*clock, 100ms);
 
 
   }
