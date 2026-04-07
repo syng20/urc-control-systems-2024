@@ -164,8 +164,8 @@ void application()
 
   // elbow
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.05,
-    .ki = 0.015, 
+    .kp = 0.05, //0.001, //0.05,
+    .ki = 0.0015,//0.00001, //0.015, 
     .kd = 0.005,
   };
   // // shoulder
