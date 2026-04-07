@@ -200,11 +200,8 @@ void application()
       // set action 
       action = servo_ptr->bldc_perseus::get_reading_action(); 
       hal::print<64>(*console, "Action: %x \n", action);
-      yepyep = 1;
     }
 
-<<<<<<< HEAD
-=======
     // continue action if necessary 
     switch (static_cast<can_perseus::action>(action)) {
       case can_perseus::action::homing: {
@@ -254,7 +251,6 @@ void application()
     // if (new_action) delay_counter++;
     hal::delay(*clock, 50ms); 
 
->>>>>>> 606cfba (remove middleman function)
 /*
     // action continuation 
     // 0x12 = update position 
@@ -272,7 +268,7 @@ void application()
       hal::delay(*clock, 100ms);
       
     } 
-    
+*/
 
 
   }
