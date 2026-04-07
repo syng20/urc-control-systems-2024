@@ -203,6 +203,58 @@ void application()
       yepyep = 1;
     }
 
+<<<<<<< HEAD
+=======
+    // continue action if necessary 
+    switch (static_cast<can_perseus::action>(action)) {
+      case can_perseus::action::homing: {
+        servo_ptr->home_encoder(); 
+        if (delay_counter >= 6) {
+          auto response_c = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
+          delay_counter = 0; 
+          hal::u16 t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
+          response_c->length = 8;
+          response_c->payload[0] = 0x20 + 0x50; 
+          response_c->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+          response_c->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+          message_finder.transceiver().send(*response_c);
+        }
+        break; 
+      }
+      case can_perseus::action::set_position: {
+        if (new_action) {
+          servo_ptr->update_position(1); 
+        }
+        else {
+          servo_ptr->update_position(0); 
+        }
+        if (delay_counter >= 6) {
+          auto response_c = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
+          delay_counter = 0; 
+          hal::u16 t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
+          response_c->length = 8;
+          response_c->payload[0] = 0x20 + 0x50; 
+          response_c->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+          response_c->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+          message_finder.transceiver().send(*response_c);
+        }
+        break;
+      }
+      default:
+        break; 
+    }
+    // if (action_loop(servo_ptr, can_ptr, response_c, action, new_action, delay_counter) == true) {
+    //   message_finder.transceiver().send(*response_c);
+    //   print_can_message(*console, *response_c);
+    //   hal::print<64>(*console, "finished transmission\n");
+    // }
+
+    new_action = false; 
+    delay_counter++; 
+    // if (new_action) delay_counter++;
+    hal::delay(*clock, 50ms); 
+
+>>>>>>> 606cfba (remove middleman function)
 /*
     // action continuation 
     // 0x12 = update position 
