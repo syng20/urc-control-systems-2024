@@ -178,24 +178,33 @@ void application()
   
   
   volatile uint32_t action = 0x00;
-
+  hal::u16 t = 0;
   bool new_action = false; 
   int delay_counter = 0; 
 
+  // hal::can_message response{
+  //   .id = 0x000,
+  //   .extended=false,
+  //   .remote_request=false,
+  //   .length = 0,
+  //   .payload = {},
+  // };
+
+
   while (true) {
-     
+    
     // received and response 
     auto msg = message_finder.find();
+    std::optional<hal::can_message> response_ptr;
     
     // if message found 
     if (msg) {
       // process message 
       print_can_message(*console, *msg);
-      auto response = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
-      can_ptr->can_perseus::process_can_message(*msg, allowed_id, servo_ptr, response); 
+      can_ptr->can_perseus::process_can_message(*msg, allowed_id, servo_ptr, response_ptr); 
       // send response 
-      message_finder.transceiver().send(*response);
-      print_can_message(*console, *response);
+      message_finder.transceiver().send(*response_ptr);
+      print_can_message(*console, *response_ptr);
       hal::print<64>(*console, "finished transmission\n");
       // set action 
       action = servo_ptr->bldc_perseus::get_reading_action(); 
@@ -207,14 +216,13 @@ void application()
       case can_perseus::action::homing: {
         servo_ptr->home_encoder(); 
         if (delay_counter >= 6) {
-          auto response_c = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
           delay_counter = 0; 
-          hal::u16 t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
-          response_c->length = 8;
-          response_c->payload[0] = 0x20 + 0x50; 
-          response_c->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-          response_c->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-          message_finder.transceiver().send(*response_c);
+          t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
+          response_ptr->length = 8;
+          response_ptr->payload[0] = 0x20 + 0x50; 
+          response_ptr->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+          response_ptr->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+          message_finder.transceiver().send(*response_ptr);
         }
         break; 
       }
@@ -226,25 +234,34 @@ void application()
           servo_ptr->update_position(0); 
         }
         if (delay_counter >= 6) {
-          auto response_c = hal::v5::make_strong_ptr<hal::can_message>(resources::driver_allocator(), hal::can_message{});
           delay_counter = 0; 
-          hal::u16 t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
-          response_c->length = 8;
-          response_c->payload[0] = 0x20 + 0x50; 
-          response_c->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-          response_c->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-          message_finder.transceiver().send(*response_c);
+          t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
+          response_ptr->length = 8;
+          response_ptr->payload[0] = 0x20 + 0x50; 
+          response_ptr->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+          response_ptr->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+          message_finder.transceiver().send(*response_ptr);
         }
         break;
       }
       default:
         break; 
     }
+    /*
     // if (action_loop(servo_ptr, can_ptr, response_c, action, new_action, delay_counter) == true) {
     //   message_finder.transceiver().send(*response_c);
     //   print_can_message(*console, *response_c);
     //   hal::print<64>(*console, "finished transmission\n");
     // }
+    */
+
+    /*
+    // for (int i = 0; i < response_ptr->length; i++) {
+    //   response_ptr->payload[i] = 0x00; 
+    // }
+    // response_ptr->length = 0; 
+    // response_ptr->id=0x000; 
+    */
 
     new_action = false; 
     delay_counter++; 

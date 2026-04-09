@@ -51,7 +51,7 @@ public:
     void process_can_message(hal::can_message const& p_message,
         hal::u16 servo_addr, 
         hal::v5::strong_ptr<bldc_perseus> bldc,
-        hal::v5::strong_ptr<hal::can_message> response);
+        std::optional<hal::can_message> response);
 
 private: 
     hal::u16 m_curr_servo_addr; 
