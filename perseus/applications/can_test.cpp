@@ -121,7 +121,7 @@ void application()
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   servo_ptr->set_pid_clamped_power(0.3); 
-  
+
   hal::print(*console, "CAN IT\n");
 
 /*
@@ -157,8 +157,6 @@ void application()
   servo_ptr->update_pid_position(pid_settings);
   
   
-  volatile uint32_t action = 0x00;
-  hal::u16 t = 0;
   bool new_action = false; 
   int delay_counter = 0; 
 
@@ -172,7 +170,26 @@ void application()
 
 
   while (true) {
+
+    // receive message 
+    std::optional<hal::can_message> msg = can_ptr->check_for_message(); 
+  
+    // react to message 
+    if (msg) {
+      print_can_message(*console, *msg);
+      can_ptr->process_can_message(*msg, servo_ptr); 
+      hal::print<64>(*console, "Action: %x \n", servo_ptr->get_reading_action());
+      new_action = true; 
+    }
+
+    // continue action 
+    servo_ptr->repeating_action_bldc(new_action); 
+    if(delay_counter >= 6) {
+      delay_counter = 0;
+      can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position()); 
+    }
     
+    /*
     // received and response 
     auto msg = message_finder.find();
     std::optional<hal::can_message> response_ptr;
@@ -229,6 +246,8 @@ void application()
       default:
         break; 
     }
+    */
+
     /*
     // if (action_loop(servo_ptr, can_ptr, response_c, action, new_action, delay_counter) == true) {
     //   message_finder.transceiver().send(*response_c);

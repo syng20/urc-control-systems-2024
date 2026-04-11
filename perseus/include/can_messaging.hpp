@@ -13,7 +13,7 @@ class can_perseus
 
 public: 
     can_perseus(
-        hal::u16 p_curr_servo_addr,
+        hal::u16 p_servo_addr,
         hal::u32 p_baudrate,
         hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
         hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
@@ -56,13 +56,12 @@ public:
     float fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent); 
     hal::i16 floating_to_fixed_point(float n, int exponent); 
     void process_can_message(hal::can_message const& p_message,
-        hal::u16 servo_addr, 
-        hal::v5::strong_ptr<bldc_perseus> bldc,
-        std::optional<hal::can_message> response);
+        hal::v5::strong_ptr<bldc_perseus> bldc);
     void repeating_action_can(uint32_t action, float sending_position); 
+    std::optional<hal::can_message> check_for_message(); 
 
 private: 
-    hal::u16 m_curr_servo_addr;
+    hal::u16 m_self_servo_addr;
     hal::u32 m_baudrate;
     hal::v5::strong_ptr<hal::can_transceiver> m_can_transceiver;
     hal::v5::strong_ptr<hal::can_bus_manager> m_can_bus_manager;
