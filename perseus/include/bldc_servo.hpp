@@ -220,6 +220,8 @@ public:
   */
   bldc_perseus::PID_settings get_pid_settings();
 
+  void repeating_action_bldc(bool new_action);
+
   // Helper conversion functions (copied from drivetrain_math.hpp)
   constexpr hal::time_duration sec_to_hal_time_duration(sec p_time)
   {

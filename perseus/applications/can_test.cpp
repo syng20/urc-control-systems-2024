@@ -109,6 +109,11 @@ void application()
   auto can_bus_manager = resources::can_bus_manager();
   auto can_interrupt = resources::can_interrupt();
   auto can_id_filter = resources::can_identifier_filter();
+  constexpr servo_address allowed_id = elbow_servo; 
+  static constexpr auto baudrate = 1_MHz;
+  can_perseus servo_can(allowed_id, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
+  auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
+  hal::print(*console, "Servo can creature setup...\n");
   // bldc
   auto h_bridge = resources::h_bridge();
   auto encoder = resources::encoder();
@@ -116,33 +121,8 @@ void application()
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   servo_ptr->set_pid_clamped_power(0.3); 
-  // can pt2
-  constexpr servo_address allowed_id = elbow_servo; 
-  can_perseus servo_can(allowed_id); 
-  auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
-  hal::print(*console, "Servo can creature setup...\n");
-
-
-  // Change the CAN baudrate here.
-  static constexpr auto baudrate = 1_MHz;
-
-  hal::print(*console, "CAN IT\n");
-
-  can_bus_manager->baud_rate(baudrate);
-  can_interrupt->on_receive([&console](hal::can_interrupt::on_receive_tag,
-                                       hal::can_message const& p_message) {
-    hal::print<64>(
-      *console, "Can message with id = 0x%lX from interrupt!\n", p_message.id);
-  });
   
-  hal::print<32>(*console,
-                 "Receiver buffer size = %zu\n",
-                 can_transceiver->receive_buffer().size());
-  hal::can_message_finder message_finder(*can_transceiver, allowed_id);
-  auto message_finder_pointer = hal::v5::make_strong_ptr<hal::can_message_finder>(resources::driver_allocator(), hal::can_message_finder(*can_transceiver, allowed_id));
-  can_id_filter->allow(allowed_id);
-  hal::print<64>(
-    *console, "🆔 Allowing ID [0x%lX] through the filter!\n", allowed_id);
+  hal::print(*console, "CAN IT\n");
 
 /*
   //  hal::can_message spam_message{
@@ -201,9 +181,11 @@ void application()
     if (msg) {
       // process message 
       print_can_message(*console, *msg);
-      can_ptr->can_perseus::process_can_message(*msg, allowed_id, servo_ptr, response_ptr); 
+      can_ptr->can_perseus::process_can_message(*msg, allowed_id, servo_ptr, *response_ptr); 
       // send response 
-      message_finder.transceiver().send(*response_ptr);
+      if (response_ptr.has_value()) {
+        message_finder.transceiver().send(*response_ptr);
+      }
       print_can_message(*console, *response_ptr);
       hal::print<64>(*console, "finished transmission\n");
       // set action 
@@ -222,7 +204,7 @@ void application()
           response_ptr->payload[0] = 0x20 + 0x50; 
           response_ptr->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
           response_ptr->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-          message_finder.transceiver().send(*response_ptr);
+          // message_finder.transceiver().send(*response_ptr);
         }
         break; 
       }
@@ -240,7 +222,7 @@ void application()
           response_ptr->payload[0] = 0x20 + 0x50; 
           response_ptr->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
           response_ptr->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-          message_finder.transceiver().send(*response_ptr);
+          // message_finder.transceiver().send(*response_ptr);
         }
         break;
       }

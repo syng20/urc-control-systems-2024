@@ -12,7 +12,14 @@ class can_perseus
 {
 
 public: 
-    can_perseus(hal::u16 curr_servo_addr); 
+    can_perseus(
+        hal::u16 p_curr_servo_addr,
+        hal::u32 p_baudrate,
+        hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
+        hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
+        hal::v5::strong_ptr<hal::can_interrupt> p_can_interrupt,
+        hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
+    ); 
 
 
     enum class action : uint32_t
@@ -52,8 +59,15 @@ public:
         hal::u16 servo_addr, 
         hal::v5::strong_ptr<bldc_perseus> bldc,
         std::optional<hal::can_message> response);
+    void repeating_action_can(uint32_t action, float sending_position); 
 
 private: 
-    hal::u16 m_curr_servo_addr; 
+    hal::u16 m_curr_servo_addr;
+    hal::u32 m_baudrate;
+    hal::v5::strong_ptr<hal::can_transceiver> m_can_transceiver;
+    hal::v5::strong_ptr<hal::can_bus_manager> m_can_bus_manager;
+    hal::v5::strong_ptr<hal::can_interrupt> m_can_interrupt;
+    hal::v5::strong_ptr<hal::can_identifier_filter> m_can_identifier_filter;
+    hal::can_message_finder m_can_message_finder;
 }; 
 } // namespace sjsu::perseus

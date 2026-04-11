@@ -14,7 +14,38 @@
 using namespace std::chrono_literals;
 namespace sjsu::perseus {
 
-can_perseus::can_perseus(hal::u16 curr_servo_addr) : m_curr_servo_addr(curr_servo_addr) {}
+can_perseus::can_perseus(
+    hal::u16 p_curr_servo_addr,
+    hal::u32 p_baudrate,
+    hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
+    hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
+    hal::v5::strong_ptr<hal::can_interrupt> p_can_interrupt,
+    hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
+  ) 
+  : 
+    m_curr_servo_addr(p_curr_servo_addr), 
+    m_baudrate(p_baudrate),
+    m_can_transceiver(p_can_transceiver),
+    m_can_bus_manager(p_can_bus_manager),
+    m_can_interrupt(p_can_interrupt),
+    m_can_identifier_filter(p_can_identifier_filter), 
+    m_can_message_finder(*p_can_transceiver, p_curr_servo_addr)
+{
+  auto console = resources::console();
+  m_can_identifier_filter->allow(m_curr_servo_addr);
+  m_can_bus_manager->baud_rate(m_baudrate); 
+  m_can_interrupt->on_receive([&console](hal::can_interrupt::on_receive_tag,
+                                       hal::can_message const& p_message) {
+    hal::print<64>(
+      *console, "Can message with id = 0x%lX from interrupt!\n", p_message.id);
+  });  
+  hal::print<32>(*console,
+                 "Receiver buffer size = %zu\n",
+                 m_can_transceiver->receive_buffer().size());
+  hal::print<64>(
+    *console, "🆔 Allowing ID [0x%lX] through the filter!\n", m_curr_servo_addr);
+  
+};
 
 // decode message from mission control 
 float can_perseus::fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent) {
@@ -141,6 +172,37 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
     }
     default:
       hal::operation_not_supported(nullptr);
+  }
+}
+
+void can_perseus::repeating_action_can(uint32_t curr_action, float sending_position) {
+  hal::can_message response{
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
+  hal::u16 t;
+  switch (static_cast<can_perseus::action>(curr_action)) {
+    case can_perseus::action::homing: {
+      t = can_perseus::floating_to_fixed_point(sending_position, 6); 
+      response.length = 8;
+      response.payload[0] = 0x20 + 0x50; 
+      response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+      break; 
+    }
+    case can_perseus::action::set_position: {
+      t = can_perseus::floating_to_fixed_point(sending_position, 6); 
+      response.length = 8;
+      response.payload[0] = 0x20 + 0x50; 
+      response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+      break;
+    }
+    default:
+      break; 
   }
 }
 

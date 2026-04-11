@@ -260,4 +260,25 @@ float bldc_perseus::position_feedforward()
     * m_servo_values.feedforward_clamp; 
 }
 
+void bldc_perseus::repeating_action_bldc(bool new_action) {
+  switch (static_cast<can_perseus::action>(m_reading_action)) {
+    case can_perseus::action::homing: {
+      bldc_perseus::home_encoder(); 
+      break; 
+    }
+    case can_perseus::action::set_position: {
+      if (new_action) {
+        bldc_perseus::update_position(1); 
+      }
+      else {
+        bldc_perseus::update_position(0); 
+      }
+      break;
+    }
+    default:
+      break; 
+  }
+}
+
+
 }// namespace sjsu::perseus
