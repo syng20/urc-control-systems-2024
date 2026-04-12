@@ -243,7 +243,7 @@ void bldc_perseus::update_position(bool from_scratch)
   // use actual position here once can be communicated/calculated via can 
   if (m_reading.position < 0) 
   { 
-    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.1f * m_clamped_power); 
+    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.01f*m_clamped_power); 
   }
   else { 
     projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power);

@@ -118,6 +118,8 @@ void application()
   servo_ptr->set_pid_clamped_power(0.3); 
   // can pt2
   constexpr servo_address allowed_id = elbow_servo; 
+  // constexpr servo_address allowed_id = shoulder_servo; 
+  // constexpr servo_address allowed_id = track_servo; 
   can_perseus servo_can(allowed_id); 
   auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
   hal::print(*console, "Servo can creature setup...\n");
@@ -162,16 +164,22 @@ void application()
   // };
 */
 
+  // // track
+  // bldc_perseus::PID_settings pid_settings = {
+  //   .kp = 0.04, 
+  //   .ki = 0.00, 
+  //   .kd = 0.00,
+  // };
   // elbow
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.05, //0.001, //0.05,
-    .ki = 0.0015,//0.00001, //0.015, 
+    .kp = 0.01, //0.001, //0.05,
+    .ki = 0.0001,//0.00001, //0.015, 
     .kd = 0.005,
   };
   // // shoulder
   // bldc_perseus::PID_settings pid_settings = {
-  //   .kp = 5.0,
-  //   .ki = 0.01,
+  //   .kp = 0.5,
+  //   .ki = 0.00,
   //   .kd = 0.00,
   // };
   servo_ptr->update_pid_position(pid_settings);
