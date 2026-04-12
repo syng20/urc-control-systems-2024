@@ -233,6 +233,9 @@ public:
     return static_cast<float>(p_time.count()) * 1e-9f;
   }
 
+  void set_actual_position(float prev_joint_pos); 
+  float get_actual_position(); 
+
   hal::time_duration get_clock_time(hal::steady_clock& p_clock);
 
 

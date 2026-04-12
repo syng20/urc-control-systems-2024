@@ -50,7 +50,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .gear_ratio = 5281.1, // 5281.1 * 2 / 2
     .feedforward_clamp = 0.2, 
     .length = 0.4826, 
-    .angle_offset = -20, 
+    .angle_offset = -40, 
     .weight_beam = 1000, 
     .weight_end = 600 
   }; 
@@ -59,7 +59,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
   //   .feedforward_clamp = 0, 
   //   .length = 0.5715, 
-  //   .angle_offset = -20, 
+  //   .angle_offset = -40, 
   //   .weight_beam = 1600, 
   //   .weight_end = 1600 
   // }; 
@@ -81,7 +81,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .weight_beam = 0, 
   //   .weight_end = 0 
   // }; 
-  m_actual_position = m_servo_values.angle_offset; 
+  m_actual_position = 0; 
 }
 
 void bldc_perseus::set_target_position(float target_position)
@@ -183,7 +183,7 @@ void bldc_perseus::home_encoder()
 }
 
 hal::degrees bldc_perseus::read_angle() {
-  return m_encoder->read().angle / m_servo_values.gear_ratio; 
+  return (m_encoder->read().angle / m_servo_values.gear_ratio); 
 }
 
 void bldc_perseus::update_velocity(bool from_scratch) 
@@ -261,8 +261,12 @@ float bldc_perseus::position_feedforward()
     * m_servo_values.feedforward_clamp; 
 }
 
+void bldc_perseus::set_actual_position(float prev_joint_pos) {
+  m_actual_position = prev_joint_pos - m_actual_position; 
+}
+
 float bldc_perseus::get_actual_position() {
-  
+  return m_actual_position; 
 }
 
 void bldc_perseus::repeating_action_bldc(bool new_action) {

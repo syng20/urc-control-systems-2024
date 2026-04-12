@@ -185,7 +185,9 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
   hal::print<64>(*console, "finished transmission\n");
 }
 
-void can_perseus::repeating_action_can(uint32_t curr_action, float sending_position) {
+void can_perseus::repeating_action_can(uint32_t curr_action, 
+                        float sending_position, 
+                        hal::v5::strong_ptr<bldc_perseus> bldc) {
   auto console = resources::console(); 
   hal::can_message response{
     .id = 0x000,
@@ -205,14 +207,18 @@ void can_perseus::repeating_action_can(uint32_t curr_action, float sending_posit
   hal::u16 t;
   switch (static_cast<can_perseus::action>(curr_action)) {
     case can_perseus::action::homing: {
-      t = can_perseus::floating_to_fixed_point(sending_position, 6); 
+      t = floating_to_fixed_point(sending_position, 6); 
       response.length = 8;
       response.payload[0] = 0x20 + 0x50; 
       response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
       response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
 
       other_joint = check_for_joint_message(); 
+      if (other_joint.has_value()) {
+        bldc->set_actual_position(fixed_to_floating_point(other_joint->payload[1], other_joint->payload[2], 6)); 
+      }
 
+      t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
       forward_to_next.length = m_self_servo_addr + 0x200; 
       forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
       forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -227,6 +233,12 @@ void can_perseus::repeating_action_can(uint32_t curr_action, float sending_posit
       response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
       response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
 
+      other_joint = check_for_joint_message(); 
+      if (other_joint.has_value()) {
+        bldc->set_actual_position(fixed_to_floating_point(other_joint->payload[1], other_joint->payload[2], 6)); 
+      }
+
+      t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
       forward_to_next.length = m_self_servo_addr + 0x200; 
       forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
       forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 

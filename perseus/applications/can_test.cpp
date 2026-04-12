@@ -124,24 +124,6 @@ void application()
 
   hal::print(*console, "CAN IT\n");
 
-/*
-  //  hal::can_message spam_message{
-  //    .id = 0x333,
-  //    .extended=false,
-  //    .remote_request=false,
-  //    .length = 3,
-  //    .payload = {0x12,0x23,0x38},
-  //  };
-
-  //  hal::can_message na_message{
-  //    .id = 0x333,
-  //    .extended=false,
-  //    .remote_request=false,
-  //    .length = 3,
-  //    .payload = {0xaa,0xbb,0xcc},
-  // };
-*/
-
   // elbow
   bldc_perseus::PID_settings pid_settings = {
     .kp = 0.05, //0.001, //0.05,
@@ -160,19 +142,10 @@ void application()
   bool new_action = false; 
   int delay_counter = 0; 
 
-  // hal::can_message response{
-  //   .id = 0x000,
-  //   .extended=false,
-  //   .remote_request=false,
-  //   .length = 0,
-  //   .payload = {},
-  // };
-
-
   while (true) {
 
     // receive message 
-    std::optional<hal::can_message> msg = can_ptr->check_for_message(); 
+    std::optional<hal::can_message> msg = can_ptr->check_for_mc_message(); 
   
     // react to message 
     if (msg) {
@@ -186,107 +159,12 @@ void application()
     servo_ptr->repeating_action_bldc(new_action); 
     if(delay_counter >= 6) {
       delay_counter = 0;
-      can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position()); 
+      can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
     }
-    
-    /*
-    // received and response 
-    auto msg = message_finder.find();
-    std::optional<hal::can_message> response_ptr;
-    
-    // if message found 
-    if (msg) {
-      // process message 
-      print_can_message(*console, *msg);
-      can_ptr->can_perseus::process_can_message(*msg, allowed_id, servo_ptr, *response_ptr); 
-      // send response 
-      if (response_ptr.has_value()) {
-        message_finder.transceiver().send(*response_ptr);
-      }
-      print_can_message(*console, *response_ptr);
-      hal::print<64>(*console, "finished transmission\n");
-      // set action 
-      action = servo_ptr->bldc_perseus::get_reading_action(); 
-      hal::print<64>(*console, "Action: %x \n", action);
-    }
-
-    // continue action if necessary 
-    switch (static_cast<can_perseus::action>(action)) {
-      case can_perseus::action::homing: {
-        servo_ptr->home_encoder(); 
-        if (delay_counter >= 6) {
-          delay_counter = 0; 
-          t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
-          response_ptr->length = 8;
-          response_ptr->payload[0] = 0x20 + 0x50; 
-          response_ptr->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-          response_ptr->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-          // message_finder.transceiver().send(*response_ptr);
-        }
-        break; 
-      }
-      case can_perseus::action::set_position: {
-        if (new_action) {
-          servo_ptr->update_position(1); 
-        }
-        else {
-          servo_ptr->update_position(0); 
-        }
-        if (delay_counter >= 6) {
-          delay_counter = 0; 
-          t = can_ptr->can_perseus::floating_to_fixed_point(servo_ptr->get_reading_position(), 6); 
-          response_ptr->length = 8;
-          response_ptr->payload[0] = 0x20 + 0x50; 
-          response_ptr->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-          response_ptr->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-          // message_finder.transceiver().send(*response_ptr);
-        }
-        break;
-      }
-      default:
-        break; 
-    }
-    */
-
-    /*
-    // if (action_loop(servo_ptr, can_ptr, response_c, action, new_action, delay_counter) == true) {
-    //   message_finder.transceiver().send(*response_c);
-    //   print_can_message(*console, *response_c);
-    //   hal::print<64>(*console, "finished transmission\n");
-    // }
-    */
-
-    /*
-    // for (int i = 0; i < response_ptr->length; i++) {
-    //   response_ptr->payload[i] = 0x00; 
-    // }
-    // response_ptr->length = 0; 
-    // response_ptr->id=0x000; 
-    */
 
     new_action = false; 
     delay_counter++; 
-    // if (new_action) delay_counter++;
     hal::delay(*clock, 50ms); 
-
-/*
-    // action continuation 
-    // 0x12 = update position 
-    if (action == 0x12) { 
-      if (yepyep == 0) { 
-        servo_ptr->update_position(1); 
-        hal::print(*console, "From Scratch = 1 \n");
-        yepyep = 1; 
-      }
-      servo_ptr->update_position(0); 
-      hal::print(*console, "From Scratch = 0 \n");
-      float d = fabs(fabs(servo_ptr->get_reading_position()) - fabs(servo_ptr->get_target_position())); 
-      
-      hal::print<64>(*console, "fabs(fabs(%.2f) - fabs(%.2f)) = %.2f -- power: %.2f \n", servo_ptr->get_reading_position(), servo_ptr->get_target_position(), d, servo_ptr->get_power());
-      hal::delay(*clock, 100ms);
-      
-    } 
-*/
 
 
   }
