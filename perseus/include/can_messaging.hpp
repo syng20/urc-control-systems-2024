@@ -37,7 +37,7 @@ public:
     set_pid_position = 0x31,
     set_pid_velocity = 0x32,
     // servo to servo 
-    // send_current_actual_position = 0x40, 
+    prev_joint_actual_position = 0x40, 
     };
     enum servo_address : hal::u16
     {
@@ -46,7 +46,11 @@ public:
     elbow_servo = 0x122,
     wrist_pitch = 0x123,
     wrist_roll = 0x124,
-    clamp = 0x125
+    clamp = 0x125,
+
+    from_shoulder = 0x321, 
+    from_elbow = 0x322
+
     };
 
     void set_curr_servo_addr(hal::u16 servo_addr); 
@@ -58,7 +62,8 @@ public:
     void process_can_message(hal::can_message const& p_message,
         hal::v5::strong_ptr<bldc_perseus> bldc);
     void repeating_action_can(uint32_t action, float sending_position); 
-    std::optional<hal::can_message> check_for_message(); 
+    std::optional<hal::can_message> check_for_mc_message(); 
+    std::optional<hal::can_message> check_for_joint_message(); 
 
 private: 
     hal::u16 m_self_servo_addr;
@@ -67,6 +72,7 @@ private:
     hal::v5::strong_ptr<hal::can_bus_manager> m_can_bus_manager;
     hal::v5::strong_ptr<hal::can_interrupt> m_can_interrupt;
     hal::v5::strong_ptr<hal::can_identifier_filter> m_can_identifier_filter;
-    hal::can_message_finder m_can_message_finder;
+    hal::can_message_finder m_mc_message_finder;
+    hal::can_message_finder m_joint_message_finder;
 }; 
 } // namespace sjsu::perseus

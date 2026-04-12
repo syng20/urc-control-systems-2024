@@ -253,6 +253,7 @@ private:
   servo_values m_servo_values; 
   float m_clamped_power;
   float m_prev_encoder_value;
+  float m_actual_position; 
   float home_encoder_value;
   uint32_t m_reading_action; 
 };

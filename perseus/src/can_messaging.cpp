@@ -30,7 +30,8 @@ can_perseus::can_perseus(
     m_can_bus_manager(p_can_bus_manager),
     m_can_interrupt(p_can_interrupt),
     m_can_identifier_filter(p_can_identifier_filter), 
-    m_can_message_finder(*p_can_transceiver, p_curr_servo_addr)
+    m_mc_message_finder(*p_can_transceiver, p_curr_servo_addr), 
+    m_joint_message_finder(*p_can_transceiver,p_curr_servo_addr+0x200)
 {
   auto console = resources::console();
   m_can_identifier_filter->allow(m_self_servo_addr);
@@ -179,12 +180,13 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
     default:
       hal::operation_not_supported(nullptr);
   }
-  m_can_message_finder.transceiver().send(response);
+  m_mc_message_finder.transceiver().send(response);
   print_can_message(*console, response);
   hal::print<64>(*console, "finished transmission\n");
 }
 
 void can_perseus::repeating_action_can(uint32_t curr_action, float sending_position) {
+  auto console = resources::console(); 
   hal::can_message response{
     .id = 0x000,
     .extended=false,
@@ -192,6 +194,14 @@ void can_perseus::repeating_action_can(uint32_t curr_action, float sending_posit
     .length = 0,
     .payload = {},
   };
+  hal::can_message forward_to_next{
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
+  std::optional<hal::can_message> other_joint; 
   hal::u16 t;
   switch (static_cast<can_perseus::action>(curr_action)) {
     case can_perseus::action::homing: {
@@ -200,6 +210,14 @@ void can_perseus::repeating_action_can(uint32_t curr_action, float sending_posit
       response.payload[0] = 0x20 + 0x50; 
       response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
       response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
+      other_joint = check_for_joint_message(); 
+
+      forward_to_next.length = m_self_servo_addr + 0x200; 
+      forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
+      forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      forward_to_next.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
       break; 
     }
     case can_perseus::action::set_position: {
@@ -208,15 +226,34 @@ void can_perseus::repeating_action_can(uint32_t curr_action, float sending_posit
       response.payload[0] = 0x20 + 0x50; 
       response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
       response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
+      forward_to_next.length = m_self_servo_addr + 0x200; 
+      forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
+      forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      forward_to_next.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
       break;
     }
     default:
       break; 
   }
+  m_mc_message_finder.transceiver().send(response);
+  print_can_message(*console, response);
+  hal::print<64>(*console, "finished response\n");
+  m_joint_message_finder.transceiver().send(forward_to_next);
+  print_can_message(*console, forward_to_next);
+  hal::print<64>(*console, "finished forward_to_next\n");
 }
 
-std::optional<hal::can_message> can_perseus::check_for_message() {
-  auto msg = m_can_message_finder.find();
+std::optional<hal::can_message> can_perseus::check_for_mc_message() {
+  auto msg = m_mc_message_finder.find();
+  if (msg) {
+    return msg; 
+  }
+  return std::nullopt; 
+}
+std::optional<hal::can_message> can_perseus::check_for_joint_message() {
+  auto msg = m_joint_message_finder.find();
   if (msg) {
     return msg; 
   }

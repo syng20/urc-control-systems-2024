@@ -81,6 +81,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .weight_beam = 0, 
   //   .weight_end = 0 
   // }; 
+  m_actual_position = m_servo_values.angle_offset; 
 }
 
 void bldc_perseus::set_target_position(float target_position)
@@ -258,6 +259,10 @@ float bldc_perseus::position_feedforward()
 {
   return std::sin(std::numbers::pi/180 * (m_reading.position + m_servo_values.angle_offset)) 
     * m_servo_values.feedforward_clamp; 
+}
+
+float bldc_perseus::get_actual_position() {
+  
 }
 
 void bldc_perseus::repeating_action_bldc(bool new_action) {
