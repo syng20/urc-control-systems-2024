@@ -115,6 +115,7 @@ void application()
   bldc_perseus servo(h_bridge, encoder);
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
+// CHANGE FOR SERVO
   servo_ptr->set_pid_clamped_power(0.3); 
   // can pt2
   constexpr servo_address allowed_id = elbow_servo; 
@@ -164,6 +165,7 @@ void application()
   // };
 */
 
+// CHANGE FOR SERVO
   // // track
   // bldc_perseus::PID_settings pid_settings = {
   //   .kp = 0.04, 

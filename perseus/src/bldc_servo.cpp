@@ -54,6 +54,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .weight_beam = 1000, 
     .weight_end = 600 
   }; 
+// CHANGE FOR SERVO
   // // shoulder 
   // m_servo_values = {
   //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
@@ -241,6 +242,7 @@ void bldc_perseus::update_position(bool from_scratch)
   // apply 
   float projected_power = pid_sum + feedforward; 
   // use actual position here once can be communicated/calculated via can 
+// CHANGE FOR SERVO
   if (m_reading.position < 0) 
   { 
     projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.01f*m_clamped_power); 
