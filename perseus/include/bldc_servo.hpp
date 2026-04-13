@@ -233,7 +233,9 @@ public:
     return static_cast<float>(p_time.count()) * 1e-9f;
   }
 
-  void set_actual_position(float prev_joint_pos); 
+  void set_prev_joint_position(float prev_joint_pos); 
+  float get_prev_joint_position(); 
+  void set_actual_position(); 
   float get_actual_position(); 
 
   hal::time_duration get_clock_time(hal::steady_clock& p_clock);
@@ -257,6 +259,7 @@ private:
   float m_clamped_power;
   float m_prev_encoder_value;
   float m_actual_position; 
+  float m_prev_joint_position; 
   float home_encoder_value;
   uint32_t m_reading_action; 
 };

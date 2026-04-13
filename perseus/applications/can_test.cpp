@@ -109,7 +109,10 @@ void application()
   auto can_bus_manager = resources::can_bus_manager();
   auto can_interrupt = resources::can_interrupt();
   auto can_id_filter = resources::can_identifier_filter();
+  // CHANGE SERVO
+  // constexpr servo_address allowed_id = track_servo; 
   constexpr servo_address allowed_id = elbow_servo; 
+  // constexpr servo_address allowed_id = shoulder_servo; 
   static constexpr auto baudrate = 1_MHz;
   can_perseus servo_can(allowed_id, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
   auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
@@ -120,22 +123,33 @@ void application()
   bldc_perseus servo(h_bridge, encoder);
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
+  // CHANGE SERVO
   servo_ptr->set_pid_clamped_power(0.3); 
+  // servo_ptr->set_pid_clamped_power(0.5); 
 
   hal::print(*console, "CAN IT\n");
 
+
+  // CHANGE SERVO
+  // // track
+  // bldc_perseus::PID_settings pid_settings = {
+  //   .kp = 0.04, 
+  //   .ki = 0.00, 
+  //   .kd = 0.00,
+  // };
   // elbow
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.05, //0.001, //0.05,
-    .ki = 0.0015,//0.00001, //0.015, 
+    .kp = 0.01, //0.001, //0.05,
+    .ki = 0.0001,//0.00001, //0.015, 
     .kd = 0.005,
   };
   // // shoulder
   // bldc_perseus::PID_settings pid_settings = {
-  //   .kp = 5.0,
-  //   .ki = 0.01,
+  //   .kp = 0.5,
+  //   .ki = 0.00,
   //   .kd = 0.00,
   // };
+
   servo_ptr->update_pid_position(pid_settings);
   
   
@@ -156,12 +170,15 @@ void application()
     }
 
     // continue action 
-    servo_ptr->repeating_action_bldc(new_action); 
-    if(delay_counter >= 6) {
+    if((servo_ptr->get_reading_action() != 0) && (delay_counter >= 6)) {
       delay_counter = 0;
       can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
+      hal::print<64>(*console, "dde 0x%x\n", servo_ptr->get_reading_action());
     }
+    servo_ptr->repeating_action_bldc(new_action); 
 
+    hal::print<64>(*console, "ppo 0x%x\n", servo_ptr->get_actual_position());
+    
     new_action = false; 
     delay_counter++; 
     hal::delay(*clock, 50ms); 
