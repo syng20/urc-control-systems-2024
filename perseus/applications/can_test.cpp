@@ -170,14 +170,14 @@ void application()
     }
 
     // continue action 
-    if((servo_ptr->get_reading_action() != 0) && (delay_counter >= 6)) {
-      delay_counter = 0;
-      can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
-      hal::print<64>(*console, "dde 0x%x\n", servo_ptr->get_reading_action());
+    if(servo_ptr->get_reading_action() != 0) {
+      if (delay_counter >= 6) {
+        delay_counter = 0;
+        can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
+        hal::print<64>(*console, "dde 0x%x\n", servo_ptr->get_reading_action());
+      }
+      servo_ptr->repeating_action_bldc(new_action); 
     }
-    servo_ptr->repeating_action_bldc(new_action); 
-
-    hal::print<64>(*console, "ppo 0x%x\n", servo_ptr->get_actual_position());
     
     new_action = false; 
     delay_counter++; 

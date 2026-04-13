@@ -54,7 +54,7 @@ can_perseus::can_perseus(
     .length = 0,
     .payload = {},
   };
-  forward_to_next = hal::can_message{
+  forward_to_next = hal::can_message {
     .id = 0x000,
     .extended=false,
     .remote_request=false,
@@ -106,6 +106,13 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
                         hal::v5::strong_ptr<bldc_perseus> bldc)
 {   
   auto console = resources::console();
+  // hal::can_message response {
+  //   .id = 0x000,
+  //   .extended=false,
+  //   .remote_request=false,
+  //   .length = 0,
+  //   .payload = {},
+  // };
   switch (static_cast<action>(p_message.payload[0])) {
     case action::freeze:{
       bldc->freeze(); 
@@ -199,6 +206,7 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
   auto console = resources::console(); 
   std::optional<hal::can_message> other_joint; 
   hal::u16 t;
+
   switch (static_cast<can_perseus::action>(curr_action)) {
     case can_perseus::action::homing: {
       t = floating_to_fixed_point(sending_position, 6); 
@@ -214,7 +222,7 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
       }
 
       t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
-      forward_to_next.id = m_self_servo_addr + 0x200; 
+      forward_to_next.id = m_self_servo_addr + 0x1FF; 
       forward_to_next.length = 8; 
       forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
       forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -236,7 +244,7 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
       }
 
       t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
-      forward_to_next.id = m_self_servo_addr + 0x200; 
+      forward_to_next.id = m_self_servo_addr + 0x1FF; 
       forward_to_next.length = 8; 
       forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
       forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -251,11 +259,13 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
     m_mc_message_finder.transceiver().send(response);
     print_can_message(*console, response);
     hal::print<64>(*console, "finished response\n");
+    response.id = 0x000; 
   }
   if (forward_to_next.id != 0x000) {
     m_joint_message_finder.transceiver().send(forward_to_next);
     print_can_message(*console, forward_to_next);
     hal::print<64>(*console, "finished forward_to_next\n");
+    forward_to_next.id = 0x000; 
   }
 }
 
