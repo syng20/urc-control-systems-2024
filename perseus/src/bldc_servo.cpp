@@ -46,24 +46,24 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .prev_dt_time = 0.0 
   };
   // CHANGE SERVO
-  // elbow 
-  m_servo_values = {
-    .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-    .feedforward_clamp = 0.2, 
-    .length = 0.4826, 
-    .angle_offset = -20, 
-    .weight_beam = 1000, 
-    .weight_end = 600 
-  }; 
-  // shoulder 
+  // // elbow 
   // m_servo_values = {
-  //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
-  //   .feedforward_clamp = 0, 
-  //   .length = 0.5715, 
-  //   .angle_offset = 0, 
-  //   .weight_beam = 1600, 
-  //   .weight_end = 1600 
+  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+  //   .feedforward_clamp = 0.2, 
+  //   .length = 0.4826, 
+  //   .angle_offset = -15, 
+  //   .weight_beam = 1000, 
+  //   .weight_end = 600 
   // }; 
+  // shoulder 
+  m_servo_values = {
+    .gear_ratio = 73935.4, // 5281.1 * 28 / 2
+    .feedforward_clamp = 0, 
+    .length = 0.5715, 
+    .angle_offset = -45, 
+    .weight_beam = 1600, 
+    .weight_end = 1600 
+  }; 
   // // wrist 
   // m_servo_values = {
   //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
@@ -83,7 +83,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .weight_end = 0 
   // }; 
 // CHANGE SERVO
-  m_actual_position = -10;  
+  m_actual_position = m_servo_values.angle_offset;  
   m_prev_joint_position = 0; 
   m_reading_action = 0x000; 
 }
@@ -255,7 +255,7 @@ void bldc_perseus::update_position(bool from_scratch)
   else { 
     projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.0001f * m_clamped_power);
   }
-    hal::print<64>(*console, "Error: %f, pid: %f, projected: %f\n", error, pid_sum, projected_power); 
+        hal::print<64>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
   m_reading.power = projected_power; 
   m_h_bridge->power(m_reading.power);
 }
@@ -276,7 +276,7 @@ float bldc_perseus::get_prev_joint_position() {
 }
 
 void bldc_perseus::set_actual_position() {
-  m_actual_position = m_reading.position + m_prev_joint_position; 
+  m_actual_position = m_reading.position + m_servo_values.angle_offset + m_prev_joint_position; 
 }
 
 float bldc_perseus::get_actual_position() {

@@ -111,8 +111,8 @@ void application()
   auto can_id_filter = resources::can_identifier_filter();
   // CHANGE SERVO
   // constexpr servo_address allowed_id = track_servo; 
-  constexpr servo_address allowed_id = elbow_servo; 
-  // constexpr servo_address allowed_id = shoulder_servo; 
+  // constexpr servo_address allowed_id = elbow_servo; 
+  constexpr servo_address allowed_id = shoulder_servo; 
   static constexpr auto baudrate = 1_MHz;
   can_perseus servo_can(allowed_id, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
   auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
@@ -124,8 +124,8 @@ void application()
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   // CHANGE SERVO
-  servo_ptr->set_pid_clamped_power(0.3); 
-  // servo_ptr->set_pid_clamped_power(0.5); 
+  // servo_ptr->set_pid_clamped_power(0.3); 
+  servo_ptr->set_pid_clamped_power(0.5); 
 
   hal::print(*console, "CAN IT\n");
 
@@ -137,18 +137,18 @@ void application()
   //   .ki = 0.00, 
   //   .kd = 0.00,
   // };
-  // elbow
-  bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.01, //0.001, //0.05,
-    .ki = 0.0001,//0.00001, //0.015, 
-    .kd = 0.005,
-  };
-  // // shoulder
+  // // elbow
   // bldc_perseus::PID_settings pid_settings = {
-  //   .kp = 0.5,
-  //   .ki = 0.00,
-  //   .kd = 0.00,
+  //   .kp = 0.01, //0.001, //0.05,
+  //   .ki = 0.0001,//0.00001, //0.015, 
+  //   .kd = 0.005,
   // };
+  // shoulder
+  bldc_perseus::PID_settings pid_settings = {
+    .kp = 0.5,
+    .ki = 0.00,
+    .kd = 0.00,
+  };
 
   servo_ptr->update_pid_position(pid_settings);
 

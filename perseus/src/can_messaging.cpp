@@ -31,7 +31,7 @@ can_perseus::can_perseus(
     m_can_interrupt(p_can_interrupt),
     m_can_identifier_filter(p_can_identifier_filter), 
     m_mc_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr)),
-    m_joint_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr+0x200))
+    m_joint_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr+0x1FF))
 {
   auto console = resources::console();
   m_can_identifier_filter->allow(m_self_servo_addr);
@@ -42,7 +42,7 @@ can_perseus::can_perseus(
   //                                           *console, 
   //                                           "Can message with id = 0x%lX from interrupt!\n", 
   //                                           p_message.id);
-  // });  
+  // }); 
   hal::print<32>(*console,
                  "Receiver buffer size = %zu\n",
                  m_can_transceiver->receive_buffer().size());
@@ -235,10 +235,11 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
       other_joint = check_for_joint_message(); 
       if (other_joint.has_value()) {
         bldc->set_prev_joint_position(fixed_to_floating_point(other_joint->payload[1], other_joint->payload[2], 6)); 
+        bldc->set_actual_position();
       }
 
       t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
-      forward_to_next.id = m_self_servo_addr + 0x1FF; 
+      forward_to_next.id = m_self_servo_addr + 0x200; 
       forward_to_next.length = 8; 
       forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
       forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -257,10 +258,11 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
       other_joint = check_for_joint_message(); 
       if (other_joint.has_value()) {
         bldc->set_prev_joint_position(fixed_to_floating_point(other_joint->payload[1], other_joint->payload[2], 6)); 
+        bldc->set_actual_position(); 
       }
 
       t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
-      forward_to_next.id = m_self_servo_addr + 0x1FF; 
+      forward_to_next.id = m_self_servo_addr + 0x200; 
       forward_to_next.length = 8; 
       forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
       forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
@@ -277,12 +279,12 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
     hal::print<64>(*console, "finished response\n");
     response.id = 0x000; 
   }
-  // if (forward_to_next.id != 0x000) {
-  //   m_joint_message_finder.transceiver().send(forward_to_next);
-  //   print_can_message(*console, forward_to_next);
-  //   hal::print<64>(*console, "finished forward_to_next\n");
-  //   forward_to_next.id = 0x000; 
-  // }
+  if (forward_to_next.id != 0x000) {
+    m_joint_message_finder.transceiver().send(forward_to_next);
+    print_can_message(*console, forward_to_next);
+    hal::print<64>(*console, "finished forward_to_next\n");
+    forward_to_next.id = 0x000; 
+  }
 }
 
 std::optional<hal::can_message> can_perseus::check_for_mc_message() {
