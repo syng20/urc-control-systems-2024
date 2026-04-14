@@ -30,37 +30,39 @@ can_perseus::can_perseus(
     m_can_bus_manager(p_can_bus_manager),
     m_can_interrupt(p_can_interrupt),
     m_can_identifier_filter(p_can_identifier_filter), 
-    m_mc_message_finder(*p_can_transceiver, p_curr_servo_addr), 
-    m_joint_message_finder(*p_can_transceiver,p_curr_servo_addr+0x200)
+    m_mc_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr)),
+    m_joint_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr+0x200))
 {
   auto console = resources::console();
   m_can_identifier_filter->allow(m_self_servo_addr);
   m_can_bus_manager->baud_rate(m_baudrate); 
-  m_can_interrupt->on_receive([&console](hal::can_interrupt::on_receive_tag,
-                                       hal::can_message const& p_message) {
-    hal::print<64>(
-      *console, "Can message with id = 0x%lX from interrupt!\n", p_message.id);
-  });  
+  // m_can_interrupt->on_receive([&console](hal::can_interrupt::on_receive_tag,
+  //                                      hal::can_message const& p_message) {
+  //                                         hal::print<64>(
+  //                                           *console, 
+  //                                           "Can message with id = 0x%lX from interrupt!\n", 
+  //                                           p_message.id);
+  // });  
   hal::print<32>(*console,
                  "Receiver buffer size = %zu\n",
                  m_can_transceiver->receive_buffer().size());
   hal::print<64>(
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", m_self_servo_addr);
     
-  response = hal::can_message {
-    .id = 0x000,
-    .extended=false,
-    .remote_request=false,
-    .length = 0,
-    .payload = {},
-  };
-  forward_to_next = hal::can_message {
-    .id = 0x000,
-    .extended=false,
-    .remote_request=false,
-    .length = 0,
-    .payload = {},
-  };
+  // response = hal::can_message {
+  //   .id = 0x000,
+  //   .extended=false,
+  //   .remote_request=false,
+  //   .length = 0,
+  //   .payload = {},
+  // };
+  // forward_to_next = hal::can_message {
+  //   .id = 0x000,
+  //   .extended=false,
+  //   .remote_request=false,
+  //   .length = 0,
+  //   .payload = {},
+  // };
   
 };
 
@@ -106,13 +108,13 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
                         hal::v5::strong_ptr<bldc_perseus> bldc)
 {   
   auto console = resources::console();
-  // hal::can_message response {
-  //   .id = 0x000,
-  //   .extended=false,
-  //   .remote_request=false,
-  //   .length = 0,
-  //   .payload = {},
-  // };
+  hal::can_message response {
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
   switch (static_cast<action>(p_message.payload[0])) {
     case action::freeze:{
       bldc->freeze(); 
@@ -206,7 +208,21 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
   auto console = resources::console(); 
   std::optional<hal::can_message> other_joint; 
   hal::u16 t;
-
+  bldc->get_pid_settings();
+  hal::can_message response {
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
+  hal::can_message forward_to_next {
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
   switch (static_cast<can_perseus::action>(curr_action)) {
     case can_perseus::action::homing: {
       t = floating_to_fixed_point(sending_position, 6); 
@@ -261,16 +277,17 @@ void can_perseus::repeating_action_can(uint32_t curr_action,
     hal::print<64>(*console, "finished response\n");
     response.id = 0x000; 
   }
-  if (forward_to_next.id != 0x000) {
-    m_joint_message_finder.transceiver().send(forward_to_next);
-    print_can_message(*console, forward_to_next);
-    hal::print<64>(*console, "finished forward_to_next\n");
-    forward_to_next.id = 0x000; 
-  }
+  // if (forward_to_next.id != 0x000) {
+  //   m_joint_message_finder.transceiver().send(forward_to_next);
+  //   print_can_message(*console, forward_to_next);
+  //   hal::print<64>(*console, "finished forward_to_next\n");
+  //   forward_to_next.id = 0x000; 
+  // }
 }
 
 std::optional<hal::can_message> can_perseus::check_for_mc_message() {
   auto msg = m_mc_message_finder.find();
+  auto console = resources::console(); 
   if (msg) {
     return msg; 
   }

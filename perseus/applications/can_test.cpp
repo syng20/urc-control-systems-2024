@@ -151,6 +151,8 @@ void application()
   // };
 
   servo_ptr->update_pid_position(pid_settings);
+
+  servo_ptr->set_actual_position();
   
   
   bool new_action = false; 
@@ -174,8 +176,7 @@ void application()
       if (delay_counter >= 6) {
         delay_counter = 0;
         can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
-        hal::print<64>(*console, "dde 0x%x\n", servo_ptr->get_reading_action());
-      }
+        }
       servo_ptr->repeating_action_bldc(new_action); 
     }
     

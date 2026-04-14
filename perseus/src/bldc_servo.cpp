@@ -51,16 +51,16 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .gear_ratio = 5281.1, // 5281.1 * 2 / 2
     .feedforward_clamp = 0.2, 
     .length = 0.4826, 
-    .angle_offset = -45, 
+    .angle_offset = -20, 
     .weight_beam = 1000, 
     .weight_end = 600 
   }; 
-  // // shoulder 
+  // shoulder 
   // m_servo_values = {
   //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
   //   .feedforward_clamp = 0, 
   //   .length = 0.5715, 
-  //   .angle_offset = -45, 
+  //   .angle_offset = 0, 
   //   .weight_beam = 1600, 
   //   .weight_end = 1600 
   // }; 
@@ -82,7 +82,9 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .weight_beam = 0, 
   //   .weight_end = 0 
   // }; 
-  m_actual_position = -45;  
+// CHANGE SERVO
+  m_actual_position = -10;  
+  m_prev_joint_position = 0; 
   m_reading_action = 0x000; 
 }
 
@@ -248,10 +250,10 @@ void bldc_perseus::update_position(bool from_scratch)
   // use actual position here once can be communicated/calculated via can 
   if (m_actual_position < 0) 
   { 
-    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.01f * m_clamped_power); 
+    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.0001f * m_clamped_power); 
   }
   else { 
-    projected_power = std::clamp(projected_power, 0.01f * m_clamped_power, m_clamped_power);
+    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.0001f * m_clamped_power);
   }
     hal::print<64>(*console, "Error: %f, pid: %f, projected: %f\n", error, pid_sum, projected_power); 
   m_reading.power = projected_power; 
@@ -274,7 +276,7 @@ float bldc_perseus::get_prev_joint_position() {
 }
 
 void bldc_perseus::set_actual_position() {
-  m_actual_position = m_reading.position - m_prev_joint_position; 
+  m_actual_position = m_reading.position + m_prev_joint_position; 
 }
 
 float bldc_perseus::get_actual_position() {

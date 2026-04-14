@@ -76,7 +76,7 @@ private:
     hal::v5::strong_ptr<hal::can_identifier_filter> m_can_identifier_filter;
     hal::can_message_finder m_mc_message_finder;
     hal::can_message_finder m_joint_message_finder;
-    hal::can_message response;
-    hal::can_message forward_to_next;
+    // hal::can_message response;
+    // hal::can_message forward_to_next;
 }; 
 } // namespace sjsu::perseus
