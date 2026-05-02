@@ -62,6 +62,9 @@ public:
     float angle_offset; 
     float weight_beam; 
     float weight_end; 
+    // for pid values
+    PID_settings position_settings; 
+    PID_settings velocity_settings; 
   };
   /**
     * @brief Set the target position of the servo.
