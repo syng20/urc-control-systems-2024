@@ -199,7 +199,11 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       break;
     }
     default:
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = static_cast<hal::byte>(p_message.payload[0]) + 0x80;
       hal::operation_not_supported(nullptr);
+      break; 
   }
   m_mc_message_finder.transceiver().send(response);
   print_can_message(*console, response);
