@@ -25,17 +25,26 @@ public:
     enum class action : uint32_t
     {
     // top priority
-    freeze = 0x0C,  // hard stop the servo to be 0
+    power_off_reset = 0x0C,  // hard stop the servo to be 0
     heartbeat = 0x0E, // are you alive
+
     // actuators
-    homing = 0x111, 
-    set_position = 0x12,
+    homing = 0x11, 
+    set_position_target = 0x12,
+    set_position_reading = 0x13, 
+    set_velocity = 0x14, 
+    set_power = 0x15, 
+    set_pid_position_config = 0x16,
+    set_pid_velocity_config = 0x17,
+
     // readers
-    read_position = 0x20,
-    read_velocity = 0x21,
-    // setters
-    set_pid_position = 0x31,
-    set_pid_velocity = 0x32,
+    read_position_target = 0x22,
+    read_position_reading = 0x23,
+    read_velocity = 0x24,
+    read_power = 0x25, 
+    read_pid_position_config = 0x26,
+    read_pid_velocity_config = 0x27,
+
     // servo to servo 
     prev_joint_actual_position = 0x40, 
     };
@@ -57,10 +66,11 @@ public:
 
     void print_can_message(hal::serial& p_console,
                         hal::can_message const& p_message); 
-    float fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent); 
+    float fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent, bool neg); 
     hal::i16 floating_to_fixed_point(float n, int exponent); 
     void process_can_message(hal::can_message const& p_message,
-                        hal::v5::strong_ptr<bldc_perseus> bldc);
+                        hal::v5::strong_ptr<bldc_perseus> bldc, 
+                        bool neg);
     void repeating_action_can(uint32_t action, 
                         float sending_position, 
                         hal::v5::strong_ptr<bldc_perseus> bldc); 

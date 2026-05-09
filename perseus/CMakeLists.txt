@@ -18,8 +18,8 @@ project(demos LANGUAGES CXX)
 
 libhal_build_demos(
   DEMOS
-    application
-    can_test
+    # application
+    can_test_wrist
   
   INCLUDES
     ../drivers/include/

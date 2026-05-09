@@ -55,24 +55,24 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .weight_beam = 1000, 
   //   .weight_end = 600 
   // }; 
-  // shoulder 
-  m_servo_values = {
-    .gear_ratio = 73935.4, // 5281.1 * 28 / 2
-    .feedforward_clamp = 0, 
-    .length = 0.5715, 
-    .angle_offset = -45, 
-    .weight_beam = 1600, 
-    .weight_end = 1600 
-  }; 
-  // // wrist 
+  // // shoulder 
   // m_servo_values = {
-  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
-  //   .feedforward_clamp = 0.2,
-  //   .length = 0.762, 
-  //   .angle_offset = 0, 
-  //   .weight_beam = 500, 
-  //   .weight_end = 100 
+  //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
+  //   .feedforward_clamp = 0, 
+  //   .length = 0.5715, 
+  //   .angle_offset = -45, 
+  //   .weight_beam = 1600, 
+  //   .weight_end = 1600 
   // }; 
+  // wrist 
+  m_servo_values = {
+    .gear_ratio = 2640.55, // 5281.1 * 1 / 2
+    .feedforward_clamp = 0.2,
+    .length = 0.762, 
+    .angle_offset = 0, 
+    .weight_beam = 500, 
+    .weight_end = 100 
+  }; 
   // // track 
   // m_servo_values = {
   //   .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
@@ -250,12 +250,12 @@ void bldc_perseus::update_position(bool from_scratch)
   // use actual position here once can be communicated/calculated via can 
   if (m_actual_position < 0) 
   { 
-    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.0001f * m_clamped_power); 
+    projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power); 
   }
   else { 
-    projected_power = std::clamp(projected_power, -1 * m_clamped_power, -0.0001f * m_clamped_power);
+    projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power);
   }
-        hal::print<64>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
+        hal::print<128>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
   m_reading.power = projected_power; 
   m_h_bridge->power(m_reading.power);
 }
@@ -289,7 +289,7 @@ void bldc_perseus::repeating_action_bldc(bool new_action) {
       bldc_perseus::home_encoder(); 
       break; 
     }
-    case can_perseus::action::set_position: {
+    case can_perseus::action::set_position_target: {
       if (new_action) {
         bldc_perseus::update_position(1); 
       }
