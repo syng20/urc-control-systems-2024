@@ -14,6 +14,7 @@
 
 int volatile dir = 1;
 
+// AS5600L angle reading, not very much to comment on here
 static float get_angle(hal::i2c& i2c)
 {
   uint8_t const addr = 0x40;
@@ -24,14 +25,16 @@ static float get_angle(hal::i2c& i2c)
   return (float(angle) / float(0xfff) * 2.0f * std::numbers::pi_v<float>);
 }
 
+// USB stack runs on core 1, so core 2 is picked to reduce jitter
 void core2()
 {
   namespace rp = hal::rp;
-  auto dwt_clk = hal::cortex_m::dwt_counter(rp::core_clock());
   triple_hbridge h;
+  // i2c needs to be run at very high speed or this loop gets bogged down by i2c
   auto i2c = rp::i2c(
     hal::pin<16>, hal::pin<17>, hal::bus<0>, { .clock_rate = 1'000'000 });
 
+  // we align the motor by running a phase for 500ms before reading the zero angle
   h.set_duty(0.85, -0.85, -0.85);
   hal::rp::sleep(std::chrono::duration<hal::u32, std::milli>(500));
   h.set_duty(0.0, 0.0, 0.0);
@@ -40,8 +43,12 @@ void core2()
   int i = 0;
   int direction = dir;
   for (;;) {
+    // we only check the dir variable once in a while to avoid too much memory contention,
+    // although it might be entirely unnecessary
     if (i >= 1'000) {
       if (dir == 0) {
+        // this stops the h-bridge from just being kept on constantly,
+        // which causes excessive current draw
         h.set_duty(0.0, 0.0, 0.0);
         while (dir == 0)
           ;
@@ -50,6 +57,7 @@ void core2()
       i = 0;
     }
     ++i;
+    // See Umeda et al.
     float mechanical_angle = (get_angle(i2c) - zero_angle);
     float electrical_angle = mechanical_angle * 14.0f;
     float quad_offset = std::numbers::pi_v<float> / 2.f * float(direction);
