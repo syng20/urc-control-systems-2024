@@ -42,14 +42,14 @@ find_package(libhal-util REQUIRED CONFIG)
 
 pico_sdk_init()
 
-add_executable(firmware src/main.cpp src/can.c)
+add_executable(bellerphon src/main.cpp src/can.c)
 
 target_link_libraries(
-    firmware
+    bellerphon
     PRIVATE hardware_i2c pico_multicore  hardware_irq
 )
 
-set(TARGETS firmware)
+set(TARGETS bellerphon)
 
 foreach(TARGET ${TARGETS})
     pico_enable_stdio_usb(${TARGET} 1)
