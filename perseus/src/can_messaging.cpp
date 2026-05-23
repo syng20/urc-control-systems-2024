@@ -1,0 +1,316 @@
+#include <cmath>
+#include <libhal-util/can.hpp>
+#include <libhal-util/serial.hpp>
+#include <libhal-util/steady_clock.hpp>
+#include <libhal/can.hpp>
+#include <libhal/error.hpp>
+#include <libhal/pointers.hpp>
+
+#include <libhal/units.hpp>
+#include <optional>
+#include <resource_list.hpp>
+#include <bldc_servo.hpp>
+#include <can_messaging.hpp>
+
+using namespace std::chrono_literals;
+namespace sjsu::perseus {
+
+can_perseus::can_perseus(
+    hal::u16 p_curr_servo_addr,
+    hal::u16 p_global_servo_addr,
+    hal::u32 p_baudrate,
+    hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
+    hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
+    hal::v5::strong_ptr<hal::can_interrupt> p_can_interrupt,
+    hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
+  ) 
+  : 
+    m_self_servo_addr(p_curr_servo_addr), 
+    m_baudrate(p_baudrate),
+    m_can_transceiver(p_can_transceiver),
+    m_can_bus_manager(p_can_bus_manager),
+    m_can_interrupt(p_can_interrupt),
+    m_can_identifier_filter(p_can_identifier_filter), 
+    m_mc_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr)),
+    m_joint_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr+0x1FF))
+{
+  auto console = resources::console();
+  m_can_identifier_filter->allow(m_self_servo_addr);
+  m_can_bus_manager->baud_rate(m_baudrate); 
+  // m_can_interrupt->on_receive([&console](hal::can_interrupt::on_receive_tag,
+  //                                      hal::can_message const& p_message) {
+  //                                         hal::print<64>(
+  //                                           *console, 
+  //                                           "Can message with id = 0x%lX from interrupt!\n", 
+  //                                           p_message.id);
+  // }); 
+  hal::print<32>(*console,
+                 "Receiver buffer size = %zu\n",
+                 m_can_transceiver->receive_buffer().size());
+  hal::print<64>(
+    *console, "🆔 Allowing ID [0x%lX] through the filter!\n", m_self_servo_addr);
+    
+  // response = hal::can_message {
+  //   .id = 0x000,
+  //   .extended=false,
+  //   .remote_request=false,
+  //   .length = 0,
+  //   .payload = {},
+  // };
+  // forward_to_next = hal::can_message {
+  //   .id = 0x000,
+  //   .extended=false,
+  //   .remote_request=false,
+  //   .length = 0,
+  //   .payload = {},
+  // };
+  
+};
+
+// decode message from mission control 
+float can_perseus::fixed_to_floating_point(hal::byte msb, hal::byte lsb, int exponent, bool neg) {
+  auto console = resources::console();
+  hal::i16 initial = (msb << 8) | lsb;
+  hal::print<64>(*console, "pure_binary: %x -- ", initial); 
+  float shifted = initial / powf(2, exponent); 
+  hal::print<64>(*console, "float cast: %x\n", shifted); 
+  if (neg) {
+    shifted = shifted * -1;
+  }
+  return shifted; 
+
+  // return static_cast<float>(static_cast<hal::i16>((msb << 8) | lsb)) / pow(2, exponent); 
+}
+
+// endcode message to mission control 
+hal::i16 can_perseus::floating_to_fixed_point(float n, int exponent) {
+  return (static_cast<hal::i16>(n) << exponent); 
+}
+
+
+
+void can_perseus::print_can_message(hal::serial& p_console,
+                       hal::can_message const& p_message)
+{
+  hal::print<256>(p_console,
+                  "Received Message from ID: 0x%lX, length: %u \n"
+                  "payload = [ 0x%02X, 0x%02X, 0x%02X, 0x%02X, 0x%02X, "
+                  "0x%02X, 0x%02X, 0x%02X ]\n",
+                  p_message.id,
+                  p_message.length,
+                  p_message.payload[0],
+                  p_message.payload[1],
+                  p_message.payload[2],
+                  p_message.payload[3],
+                  p_message.payload[4],
+                  p_message.payload[5],
+                  p_message.payload[6],
+                  p_message.payload[7]);
+}
+
+void can_perseus::process_can_message(hal::can_message const& p_message,
+                        hal::v5::strong_ptr<bldc_perseus> bldc, 
+                        bool neg)
+{   
+  auto console = resources::console();
+  hal::can_message response {
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
+  switch (static_cast<action>(p_message.payload[0])) {
+    case action::power_off_reset:{
+      bldc->freeze(); 
+      bldc->set_reading_action(static_cast<uint32_t>(action::power_off_reset)); 
+      break;
+    }
+    case action::heartbeat: {
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = m_self_servo_addr + 0x50;
+      bldc->set_reading_action(static_cast<uint32_t>(action::heartbeat)); 
+      break; 
+    }
+    case action::homing: {
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = 0x01;
+      response.payload[1] = 0x11;
+      bldc->set_reading_action(static_cast<uint32_t>(action::homing)); 
+      break; 
+    }
+    case action::set_position_target: {
+      float target_position = fixed_to_floating_point(p_message.payload[1], p_message.payload[2], 6, neg);
+      bldc->set_target_position(target_position);
+      hal::print<64>(*console, "Target = %f\n", target_position);
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = static_cast<hal::byte>(action::set_position_target) + 0x50;;
+      bldc->set_reading_action(static_cast<uint32_t>(action::set_position_target)); 
+      break;
+    }
+    case action::read_position_target: {
+      float reading_position = bldc->get_reading_position();
+      hal::u16 t = can_perseus::floating_to_fixed_point(reading_position, 6); 
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 8;
+      response.payload[0] = 0x20 + 0x50; 
+      response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+      bldc->set_reading_action(static_cast<uint32_t>(action::read_position_target)); 
+      break;
+    }
+    case action::read_velocity: {
+      float reading_velocity = bldc->get_reading_velocity();
+      hal::u16 t = can_perseus::floating_to_fixed_point(reading_velocity, 6); 
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 8;
+      response.payload[0] = 0x20 + 0x50; 
+      response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+      bldc->set_reading_action(static_cast<uint32_t>(action::read_velocity)); 
+      break;
+    }
+    case action::set_pid_position_config: {
+      bldc_perseus::PID_settings settings = {
+        .kp = fixed_to_floating_point(p_message.payload[1], p_message.payload[2], 14, 0),
+        .ki = fixed_to_floating_point(p_message.payload[3], p_message.payload[4], 14, 0),
+        .kd = fixed_to_floating_point(p_message.payload[5], p_message.payload[6], 14, 0)
+      };
+      bldc->update_pid_position(settings);
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = static_cast<hal::byte>(action::set_pid_position_config) + 0x50;
+      bldc->set_reading_action(static_cast<uint32_t>(action::set_pid_position_config)); 
+      break;
+    }
+    case action::set_pid_velocity_config: {
+      bldc_perseus::PID_settings settings = {
+        .kp = fixed_to_floating_point(p_message.payload[1], p_message.payload[2], 14, 0),
+        .ki = fixed_to_floating_point(p_message.payload[3], p_message.payload[4], 14, 0),
+        .kd = fixed_to_floating_point(p_message.payload[5], p_message.payload[6], 14, 0)
+      };
+      bldc->update_pid_velocity(settings);
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = static_cast<hal::byte>(action::set_pid_velocity_config) + 0x50;
+      bldc->set_reading_action(static_cast<uint32_t>(action::set_pid_velocity_config)); 
+      break;
+    }
+    default:
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 1;
+      response.payload[0] = static_cast<hal::byte>(p_message.payload[0]) + 0x80;
+      hal::operation_not_supported(nullptr);
+      break; 
+  }
+  m_mc_message_finder.transceiver().send(response);
+  print_can_message(*console, response);
+  hal::print<64>(*console, "finished transmission\n");
+}
+
+void can_perseus::repeating_action_can(uint32_t curr_action, 
+                        float sending_position, 
+                        hal::v5::strong_ptr<bldc_perseus> bldc) {
+  auto console = resources::console(); 
+  std::optional<hal::can_message> other_joint; 
+  hal::u16 t;
+  bldc->get_pid_settings();
+  hal::can_message response {
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
+  hal::can_message forward_to_next {
+    .id = 0x000,
+    .extended=false,
+    .remote_request=false,
+    .length = 0,
+    .payload = {},
+  };
+  switch (static_cast<can_perseus::action>(curr_action)) {
+    case can_perseus::action::homing: {
+      t = floating_to_fixed_point(sending_position, 6); 
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 8;
+      response.payload[0] = 0x20 + 0x50; 
+      response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
+      other_joint = check_for_joint_message(); 
+      if (other_joint.has_value()) {
+        bldc->set_prev_joint_position(fixed_to_floating_point(other_joint->payload[1], other_joint->payload[2], 6, 0)); 
+        bldc->set_actual_position();
+      }
+
+      t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
+      forward_to_next.id = m_self_servo_addr + 0x200; 
+      forward_to_next.length = 8; 
+      forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
+      forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      forward_to_next.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
+      break; 
+    }
+    case can_perseus::action::set_position_target: {
+      t = can_perseus::floating_to_fixed_point(sending_position, 6); 
+      response.id = m_self_servo_addr + 0x100;
+      response.length = 8;
+      response.payload[0] = 0x20 + 0x50; 
+      response.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      response.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
+      other_joint = check_for_joint_message(); 
+      if (other_joint.has_value()) {
+        bldc->set_prev_joint_position(fixed_to_floating_point(other_joint->payload[1], other_joint->payload[2], 6, 0)); 
+        bldc->set_actual_position(); 
+      }
+
+      t = floating_to_fixed_point(bldc->get_actual_position(), 6); 
+      forward_to_next.id = m_self_servo_addr + 0x200; 
+      forward_to_next.length = 8; 
+      forward_to_next.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
+      forward_to_next.payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
+      forward_to_next.payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
+
+      break;
+    }
+    default:
+      break; 
+  }
+  if (response.id != 0x000) {
+    m_mc_message_finder.transceiver().send(response);
+    print_can_message(*console, response);
+    hal::print<64>(*console, "finished response\n");
+    response.id = 0x000; 
+  }
+  if (forward_to_next.id != 0x000) {
+    m_joint_message_finder.transceiver().send(forward_to_next);
+    print_can_message(*console, forward_to_next);
+    hal::print<64>(*console, "finished forward_to_next\n");
+    forward_to_next.id = 0x000; 
+  }
+}
+
+std::optional<hal::can_message> can_perseus::check_for_mc_message() {
+  auto msg = m_mc_message_finder.find();
+  auto console = resources::console(); 
+  if (msg) {
+    return msg; 
+  }
+  return std::nullopt; 
+}
+std::optional<hal::can_message> can_perseus::check_for_joint_message() {
+  auto msg = m_joint_message_finder.find();
+  if (msg) {
+    return msg; 
+  }
+  return std::nullopt; 
+}
+
+
+} // namespace sjsu::perseus
