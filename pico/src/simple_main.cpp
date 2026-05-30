@@ -1,3 +1,4 @@
+#include "base64.hpp"
 #include <hbridge.hpp>
 #include <hardware/gpio.h>
 #include <hardware/pwm.h>
@@ -23,10 +24,10 @@ int main()
   auto out = rp::stdio_serial();
   auto dwt_clk = hal::cortex_m::dwt_counter(rp::core_clock());
 
-for(;;){
-  hal::print(out, "Hello world!\n");
-  hal::delay(dwt_clk, 1s);
-}
+// for(;;){
+//   hal::print(out, "Hello world!\n");
+//   hal::delay(dwt_clk, 1s);
+// }
 
   triple_hbridge h;
   auto ttt = dwt_clk.uptime();
@@ -41,7 +42,7 @@ for(;;){
   float const zero_angle = get_angle(i2c);
 
   for (;;) {
-    // hal::u64 time = dwt_clk.uptime();
+    hal::u64 time = dwt_clk.uptime();
     float mechanical_angle = (get_angle(i2c) - zero_angle);
     float electrical_angle = mechanical_angle * 14.0f;
     float quadrature = electrical_angle + std::numbers::pi_v<float> / 2.f;
@@ -50,7 +51,7 @@ for(;;){
     float a = max_duty * cosf(quadrature),
           b = max_duty * cosf(quadrature - offset),
           c = max_duty * cosf(quadrature + offset);
-/*
+
     if ((time - ttt) / dwt_clk.frequency() > 0.1f) {
       auto [data, len] =
         b64::encode_message(count, mechanical_angle, electrical_angle);
@@ -58,7 +59,7 @@ for(;;){
       ttt = time;
       count = 0;
     }
-*/
+
     h.set_duty(a, b, c);
     count += 1;
   }
