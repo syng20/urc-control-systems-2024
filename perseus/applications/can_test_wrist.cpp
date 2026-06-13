@@ -97,7 +97,7 @@ void application()
   
   bool new_action = false; 
   int p_o_r = 0; // pitch = 0, roll = 1
-  bool neg = 1; // 0 = pos, 1 = neg (this only matters for pitch (left should be negative))
+  // bool neg = 1; // 0 = pos, 1 = neg (this only matters for pitch (left should be negative))
   int delay_counter = 0; 
 
   while (true) {
@@ -109,14 +109,14 @@ void application()
     // react to message 
     if (msg_r) {
       print_can_message(*console, *msg_r);
-      roll_can_ptr->process_can_message(*msg_r, servo_ptr, 0); 
+      roll_can_ptr->process_can_message(*msg_r, servo_ptr); 
       hal::print<64>(*console, "Roll action: %x \n", servo_ptr->get_reading_action());
       new_action = true; 
       p_o_r = 1; 
     }
     if (msg_p) {
       print_can_message(*console, *msg_p);
-      pitch_can_ptr->process_can_message(*msg_p, servo_ptr, neg); 
+      pitch_can_ptr->process_can_message(*msg_p, servo_ptr); 
       hal::print<64>(*console, "Pitch action: %x \n", servo_ptr->get_reading_action());
       new_action = true; 
       p_o_r = 0;
@@ -127,10 +127,10 @@ void application()
       if (delay_counter >= 6) {
         delay_counter = 0;
         if (p_o_r) {
-          pitch_can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
+          pitch_can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr); 
         }
         else {
-          roll_can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr->get_reading_position(), servo_ptr); 
+          roll_can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr); 
         }
       }
       servo_ptr->repeating_action_bldc(new_action); 

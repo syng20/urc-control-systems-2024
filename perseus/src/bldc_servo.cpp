@@ -46,42 +46,42 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .prev_dt_time = 0.0 
   };
   // CHANGE SERVO
-  // // elbow 
-  // m_servo_values = {
-  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-  //   .feedforward_clamp = 0.2, 
-  //   .length = 0.4826, 
-  //   .angle_offset = -15, 
-  //   .weight_beam = 1000, 
-  //   .weight_end = 600 
-  // }; 
+  // elbow 
+  m_servo_values = {
+    .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+    .feedforward_clamp = 0.2, 
+    .length = 0.4826, 
+    .angle_offset = 0, 
+    .weight_beam = 1000, 
+    .weight_end = 600 
+  }; 
   // // shoulder 
   // m_servo_values = {
   //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
   //   .feedforward_clamp = 0, 
   //   .length = 0.5715, 
-  //   .angle_offset = -45, 
+  //   .angle_offset = 0, 
   //   .weight_beam = 1600, 
   //   .weight_end = 1600 
   // }; 
-  // wrist 
-  m_servo_values = {
-    .gear_ratio = 2640.55, // 5281.1 * 1 / 2
-    .feedforward_clamp = 0.2,
-    .length = 0.762, 
-    .angle_offset = 0, 
-    .weight_beam = 500, 
-    .weight_end = 100 
-  }; 
-  // // track 
+  // // wrist 
   // m_servo_values = {
-  //   .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
-  //   .feedforward_clamp = 0,
-  //   .length = 0, 
+  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
+  //   .feedforward_clamp = 0.2,
+  //   .length = 0.762, 
   //   .angle_offset = 0, 
-  //   .weight_beam = 0, 
-  //   .weight_end = 0 
+  //   .weight_beam = 500, 
+  //   .weight_end = 100 
   // }; 
+  // track 
+  m_servo_values = {
+    .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
+    .feedforward_clamp = 0,
+    .length = 0, 
+    .angle_offset = 0, 
+    .weight_beam = 0, 
+    .weight_end = 0 
+  }; 
 // CHANGE SERVO
   m_actual_position = m_servo_values.angle_offset;  
   m_prev_joint_position = 0; 
@@ -102,6 +102,11 @@ float bldc_perseus::get_reading_position()
 {
   m_reading.position = bldc_perseus::read_angle();
   return m_reading.position;
+}
+
+void bldc_perseus::set_reading_position(float position)
+{
+  m_reading.position = position;
 }
 
 void bldc_perseus::set_target_velocity(float target_velocity)

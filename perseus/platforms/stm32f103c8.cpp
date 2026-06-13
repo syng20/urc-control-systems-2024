@@ -27,6 +27,7 @@
 
 #include <libhal-util/can.hpp>
 #include <libhal-util/serial.hpp>
+#include <libhal/can.hpp>
 #include <libhal/output_pin.hpp>
 #include <libhal/pointers.hpp>
 #include <resource_list.hpp>
@@ -191,7 +192,7 @@ hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
     resources::driver_allocator(), std::move(h_bridge));
 }
 hal::v5::optional_ptr<hal::stm32f1::can_peripheral_manager_v2> can_manager;
-
+std::array<hal::v5::optional_ptr<hal::can_mask_filter>, 2> can_mask;
 void initialize_can()
 {
   constexpr hal::u32 baudrate = 1'000'000;
@@ -206,6 +207,13 @@ void initialize_can()
         *clock_ref,
         std::chrono::milliseconds(1),
         hal::stm32f1::can_pins::pb9_pb8);
+    auto f = hal::acquire_can_mask_filter(driver_allocator(), can_manager);
+    hal::can_mask_filter::pair p;
+    p.id = 0;
+    p.mask = 0;
+    can_mask[0] = f[0];
+    can_mask[1] = f[1];
+    can_mask.at(0)->allow(p);
   }
 }
 

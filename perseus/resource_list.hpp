@@ -81,6 +81,7 @@ hal::v5::strong_ptr<hal::can_transceiver> can_transceiver();
 hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager();
 hal::v5::strong_ptr<hal::can_interrupt> can_interrupt();
 hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter();
+hal::v5::strong_ptr<hal::can_mask_filter> can_mask_filter(); 
 
 inline void reset()
 {
