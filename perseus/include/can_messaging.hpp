@@ -50,7 +50,8 @@ public:
     read_pid_velocity_config = 0x28,
 
     // servo to servo 
-    prev_joint_actual_position = 0x40, 
+    prev_joint_actual_position = 0x41, 
+    prev_joint_position_response = 0x51, 
     };
     enum servo_address : hal::u16
     {

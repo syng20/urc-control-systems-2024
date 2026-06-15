@@ -20,7 +20,13 @@ libhal_build_demos(
   DEMOS
     # application
     can_test
-    can_test_wrist
+    # can_test_wrist
+    can_test_elbow 
+    can_test_shoulder
+    can_test_track
+    can_test_wrist_l
+    can_test_wrist_r
+
   
   INCLUDES
     ../drivers/include/
@@ -32,6 +38,7 @@ SOURCES
     src/bldc_servo.cpp
     ../drivers/src/serial_commands.cpp
     src/can_messaging.cpp
+    applications/can_test_copy.cpp
     
 PACKAGES
     #Template for importing libhal packages is "libhal-__device__"

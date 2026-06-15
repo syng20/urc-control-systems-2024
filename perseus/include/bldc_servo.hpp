@@ -237,6 +237,7 @@ public:
   float get_prev_joint_position(); 
   void set_actual_position(); 
   float get_actual_position(); 
+  void set_servo_values(servo_values p_servo_values); 
 
   hal::time_duration get_clock_time(hal::steady_clock& p_clock);
 

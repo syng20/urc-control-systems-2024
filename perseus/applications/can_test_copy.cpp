@@ -15,16 +15,6 @@
 using namespace std::chrono_literals;
 namespace sjsu::perseus {
 
-enum servo_address : hal::u16
-{
-track_servo = 0x121,
-  shoulder_servo = 0x122,
-  elbow_servo = 0x123,
-  wrist_left = 0x124,
-  wrist_right = 0x125,
-    clamp = 0x126,
-};
-
 void print_can_message(hal::serial& p_console,
                        hal::can_message const& p_message)
 {
@@ -43,60 +33,11 @@ void print_can_message(hal::serial& p_console,
   hal::print(p_console, "]\n}\n");
 }
 
-// bool action_loop(hal::v5::strong_ptr<bldc_perseus> bldc,
-//                         hal::v5::strong_ptr<can_perseus> can,
-//                         hal::v5::strong_ptr<hal::can_message> response,
-//                         uint32_t action, 
-//                         bool new_action, 
-//                         int delay_counter)
-// {   
-//   bool send = false; 
-//   auto console = resources::console();
-//   switch (static_cast<can_perseus::action>(action)) {
-//     case can_perseus::action::homing: {
-//       bldc->home_encoder(); 
-//       if (delay_counter >= 10) {
-//         delay_counter = 0; 
-//         hal::u16 t = can->can_perseus::floating_to_fixed_point(bldc->get_reading_position(), 6); 
-//         response->length = 8;
-//         response->payload[0] = 0x20 + 0x50; 
-//         response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-//         response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-//         send = true; 
-//       }
-//       break; 
-//     }
-//     case can_perseus::action::set_position: {
-//       if (new_action) {
-//         bldc->update_position(1); 
-//       }
-//       else {
-//         bldc->update_position(0); 
-//       }
-//       if (delay_counter >= 10) {
-//         delay_counter = 0; 
-//         hal::u16 t = can->can_perseus::floating_to_fixed_point(bldc->get_reading_position(), 6); 
-//         response->length = 8;
-//         response->payload[0] = 0x20 + 0x50; 
-//         response->payload[1] = static_cast<hal::byte>(t >> 8) & 0xFF; // HIGH BYTE FIRST 
-//         response->payload[2] = static_cast<hal::byte>(t >> 0) & 0xFF;  // LOW BYTE SECOND
-//         send = true; 
-//       }
-//       break;
-//     }
-//     default:
-//       break; 
-//   }
-//   return send; 
-// }
-
-
-
 // each rotation of the output shaft of the track servo is 8 mm of linear travel
 // so 1 degree of rotation is 8mm / 360 = 0.0222 mm of linear travel
 // 188:1 is for shoulder servo 5281.1 * 28
 // 188:1 elbow 1-2 reduction. 5281.1 * 2
-void application()
+void can_application(hal::u16 allowed_id, bldc_perseus::PID_settings pid_settings, bldc_perseus::servo_values p_servo_values)
 {
   using namespace hal::literals;
   using namespace std::chrono_literals;
@@ -112,7 +53,7 @@ void application()
   // CHANGE SERVO
   // constexpr servo_address allowed_id = track_servo; 
   // constexpr servo_address allowed_id = elbow_servo; 
-  constexpr servo_address allowed_id = shoulder_servo; 
+  // constexpr servo_address allowed_id = shoulder_servo; 
   // constexpr servo_address allowed_id = wrist_left; 
   // constexpr servo_address allowed_id = wrist_right;
   static constexpr auto baudrate = 1_MHz;
@@ -145,12 +86,12 @@ void application()
   //   .ki = 0.00, 
   //   .kd = 0.002,
   // };
-  // shoulder
-  bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.5,
-    .ki = 0.00,
-    .kd = 0.005,
-  };
+  // // shoulder
+  // bldc_perseus::PID_settings pid_settings = {
+  //   .kp = 0.5,
+  //   .ki = 0.00,
+  //   .kd = 0.005,
+  // };
   // // wrist
   //   bldc_perseus::PID_settings pid_settings = {
   //   .kp = 0.05,
@@ -159,6 +100,7 @@ void application()
   // };
 
   servo_ptr->update_pid_position(pid_settings);
+  servo_ptr->set_servo_values(p_servo_values); 
 
   servo_ptr->set_actual_position();
   

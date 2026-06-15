@@ -46,15 +46,15 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .prev_dt_time = 0.0 
   };
   // CHANGE SERVO
-  // elbow 
-  m_servo_values = {
-    .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-    .feedforward_clamp = 0.2, 
-    .length = 0.4826, 
-    .angle_offset = 0, 
-    .weight_beam = 1000, 
-    .weight_end = 600 
-  }; 
+  // // elbow 
+  // m_servo_values = {
+  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+  //   .feedforward_clamp = 0.2, 
+  //   .length = 0.4826, 
+  //   .angle_offset = 0, 
+  //   .weight_beam = 1000, 
+  //   .weight_end = 600 
+  // }; 
   // // shoulder 
   // m_servo_values = {
   //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
@@ -74,13 +74,22 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   //   .weight_end = 100 
   // }; 
   // track 
+  // m_servo_values = {
+  //   .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
+  //   .feedforward_clamp = 0,
+  //   .length = 0, 
+  //   .angle_offset = 0, 
+  //   .weight_beam = 0, 
+  //   .weight_end = 0 
+  // }; 
+  // default 
   m_servo_values = {
-    .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
-    .feedforward_clamp = 0,
-    .length = 0, 
-    .angle_offset = 0, 
-    .weight_beam = 0, 
-    .weight_end = 0 
+    .gear_ratio = 0.01, 
+    .feedforward_clamp = 0.01, 
+    .length = 0.01, 
+    .angle_offset = 0.01, 
+    .weight_beam = 0.01, 
+    .weight_end = 0.01 
   }; 
 // CHANGE SERVO
   m_actual_position = m_servo_values.angle_offset;  
@@ -107,6 +116,8 @@ float bldc_perseus::get_reading_position()
 void bldc_perseus::set_reading_position(float position)
 {
   m_reading.position = position;
+  auto console = resources::console(); 
+  hal::print(*console, "\nHH\n"); 
 }
 
 void bldc_perseus::set_target_velocity(float target_velocity)
@@ -286,6 +297,10 @@ void bldc_perseus::set_actual_position() {
 
 float bldc_perseus::get_actual_position() {
   return m_actual_position; 
+}
+
+void bldc_perseus::set_servo_values(servo_values p_servo_values) {
+  m_servo_values = p_servo_values; 
 }
 
 void bldc_perseus::repeating_action_bldc(bool new_action) {
