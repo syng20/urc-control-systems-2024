@@ -73,6 +73,8 @@ public:
                         hal::can_message const& p_message); 
     float fixed_to_floating_point_32(hal::byte b0, hal::byte b1, hal::byte b2, hal::byte b3, int exponent); 
     float fixed_to_floating_point_16(hal::byte b0, hal::byte b1, int exponent); 
+    float floating_to_position(float floating);
+    float position_to_floating(float position); 
     hal::i32 floating_to_fixed_point_32(float n, int exponent); 
     hal::i16 floating_to_fixed_point_16(float n, int exponent); 
     void process_can_message(hal::can_message const& p_message,
