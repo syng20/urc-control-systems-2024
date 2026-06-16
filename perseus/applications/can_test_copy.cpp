@@ -67,7 +67,7 @@ void can_application(hal::u16 allowed_id, bldc_perseus::PID_settings pid_setting
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   // CHANGE SERVO
-  servo_ptr->set_pid_clamped_power(0.3); 
+  // servo_ptr->set_pid_clamped_power(0.3); 
   // servo_ptr->set_pid_clamped_power(0.5); 
 
   hal::print(*console, "CAN IT\n");

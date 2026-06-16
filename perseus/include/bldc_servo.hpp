@@ -66,6 +66,9 @@ public:
     float angle_offset; 
     float weight_beam; 
     float weight_end; 
+    // for safety
+    float high_clamped_value; 
+    float low_clamped_value; 
   };
   /**
     * @brief Set the target position of the servo.
@@ -169,17 +172,22 @@ public:
   float position_feedforward();
 
 
-  /**
-    * @brief Set the maximum power the PID controller is allowed to use.
-    * @param power The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
-  */
-  void set_pid_clamped_power(float power);
+  // /**
+  //   * @brief Set the maximum power the PID controller is allowed to use.
+  //   * @param power The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
+  // */
+  // void set_pid_clamped_power(float power);
 
-  /**
-    * @brief Get the maximum power the PID controller is allowed to use.
-    * @return The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
-  */
-  float get_pid_clamped_power();
+  // /**
+  //   * @brief Get the maximum power the PID controller is allowed to use.
+  //   * @return The clamped power as a float between 0.0 and 1.0, representing 0% to 100% of maximum possible power.
+  // */
+  // float get_pid_clamped_power();
+
+  void set_pos_clamped_power(float power);
+  float get_pos_clamped_power();
+  void set_neg_clamped_power(float power);
+  float get_neg_clamped_power(); 
 
   /**
     * @brief Sets the power (ignores clamped power) 
@@ -257,7 +265,7 @@ private:
   PID_prev_values m_PID_prev_velocity_values; 
   PID_prev_values m_PID_prev_position_values; 
   servo_values m_servo_values; 
-  float m_clamped_power;
+  // float m_clamped_power;
   float m_prev_encoder_value;
   float m_actual_position; 
   float m_prev_joint_position; 

@@ -56,7 +56,9 @@ void application()
     .length = 0, 
     .angle_offset = 0, 
     .weight_beam = 0, 
-    .weight_end = 0 
+    .weight_end = 0, 
+    .high_clamped_value = 0.3, 
+    .low_clamped_value = -0.3 
   }; 
   hal::print(*console, "Starting Track\n");
   can_application(allowed_id, pid_settings, servo_values); 

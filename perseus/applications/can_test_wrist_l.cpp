@@ -55,7 +55,9 @@ void application()
     .length = 0.762, 
     .angle_offset = 0, 
     .weight_beam = 500, 
-    .weight_end = 100 
+    .weight_end = 100, 
+    .high_clamped_value = 0.3, 
+    .low_clamped_value = -0.3 
   }; 
   hal::print(*console, "Starting Wrist Left\n");
   can_application(allowed_id, pid_settings, servo_values); 

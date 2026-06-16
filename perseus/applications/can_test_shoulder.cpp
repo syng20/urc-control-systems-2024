@@ -55,7 +55,9 @@ void application()
     .length = 0.5715, 
     .angle_offset = 0, 
     .weight_beam = 1600, 
-    .weight_end = 1600 
+    .weight_end = 1600, 
+    .high_clamped_value = 0.3, 
+    .low_clamped_value = -0.3 
   }; 
   hal::print(*console, "Starting Shoulder\n");
   can_application(allowed_id, pid_settings, servo_values);   

@@ -19,7 +19,7 @@ project(demos LANGUAGES CXX)
 libhal_build_demos(
   DEMOS
     # application
-    can_test
+    # can_test
     # can_test_wrist
     can_test_elbow 
     can_test_shoulder

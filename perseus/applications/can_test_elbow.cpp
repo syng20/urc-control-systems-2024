@@ -55,7 +55,9 @@ void application()
     .length = 0.4826, 
     .angle_offset = 0, 
     .weight_beam = 1000, 
-    .weight_end = 600 
+    .weight_end = 600, 
+    .high_clamped_value = -0.00001, 
+    .low_clamped_value = -0.3 
   }; 
   hal::print(*console, "Starting Elbow\n");
   can_application(allowed_id, pid_settings, servo_values); 

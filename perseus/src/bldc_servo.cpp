@@ -33,7 +33,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .power = 0.0f , 
     .velocity = 0
   };
-  m_clamped_power = 0.3;
+  // m_clamped_power = 0.3;
   m_prev_encoder_value = bldc_perseus::read_angle();
   m_PID_prev_velocity_values = {
     .integral = 0, 
@@ -89,7 +89,9 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .length = 0.01, 
     .angle_offset = 0.01, 
     .weight_beam = 0.01, 
-    .weight_end = 0.01 
+    .weight_end = 0.01, 
+    .high_clamped_value = 0.01, 
+    .low_clamped_value = -0.01 
   }; 
 // CHANGE SERVO
   m_actual_position = m_servo_values.angle_offset;  
@@ -223,13 +225,27 @@ void bldc_perseus::reset_time()
   m_last_clock_check = m_clock->uptime();
 }
 
-void bldc_perseus::set_pid_clamped_power(float power)
+void bldc_perseus::set_pos_clamped_power(float power)
 {
-  m_clamped_power = power; 
+  m_servo_values.high_clamped_value = power; 
 }
-float bldc_perseus::get_pid_clamped_power() {
-  return m_clamped_power; 
+float bldc_perseus::get_pos_clamped_power() {
+  return m_servo_values.high_clamped_value; 
 }
+void bldc_perseus::set_neg_clamped_power(float power)
+{
+  m_servo_values.low_clamped_value = power; 
+}
+float bldc_perseus::get_neg_clamped_power() {
+  return m_servo_values.low_clamped_value; 
+}
+// void bldc_perseus::set_pid_clamped_power(float power)
+// {
+//   m_clamped_power = power; 
+// }
+// float bldc_perseus::get_pid_clamped_power() {
+//   return m_clamped_power; 
+// }
 
 hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
 {
@@ -263,15 +279,19 @@ void bldc_perseus::update_position(bool from_scratch)
   // apply 
   float projected_power = pid_sum + feedforward; 
   // CHANGE SERVO
-  // use actual position here once can be communicated/calculated via can 
-  if (m_actual_position < 0) 
-  { 
-    projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power); 
+  // // use actual position here once can be communicated/calculated via can 
+  // if (m_actual_position < 0) 
+  // { 
+  //   projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power); 
+  // }
+  // else { 
+  //   projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power);
+  // }
+  projected_power = std::clamp(projected_power, m_servo_values.low_clamped_value, m_servo_values.high_clamped_value);
+  if (m_actual_position > 0) {
+    projected_power = projected_power * -1; 
   }
-  else { 
-    projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power);
-  }
-        hal::print<128>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
+  hal::print<128>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
   m_reading.power = projected_power; 
   m_h_bridge->power(m_reading.power);
 }
