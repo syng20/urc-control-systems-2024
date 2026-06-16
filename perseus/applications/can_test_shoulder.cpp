@@ -46,7 +46,7 @@ void application()
   bldc_perseus::PID_settings pid_settings = {
     .kp = 0.5,
     .ki = 0.00,
-    .kd = 0.005,
+    .kd = 0.007,
   };
   // servo_values 
   bldc_perseus::servo_values servo_values = {

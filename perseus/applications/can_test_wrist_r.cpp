@@ -44,9 +44,9 @@ void application()
   constexpr servo_address allowed_id = wrist_right; 
   // pid
     bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.05,
+    .kp = 0.005,
     .ki = 0.00,
-    .kd = 0.008,
+    .kd = 0.00,
   };
   // servo_values 
   bldc_perseus::servo_values servo_values = {

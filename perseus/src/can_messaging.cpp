@@ -427,10 +427,10 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       float exponent = 14.0; 
       hal::i32 t = floating_to_fixed_point_32(bldc->get_actual_position() / 360, exponent); 
       hal::print<64>(*console, "Actual position = %d\n", t);
-      hal::u16 next_addr = (p_message.payload[1] << 8) | (p_message.payload[2]); 
+      hal::u32 next_addr = (p_message.payload[1] << 8) | (p_message.payload[2]); 
       response.id = next_addr;
       response.length = 6;
-      response.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position);
+      response.payload[0] = static_cast<hal::byte>(action::prev_joint_position_response);
       response.payload[1] = static_cast<hal::byte>(exponent);
       response.payload[2] = static_cast<hal::byte>(t >> 24) & 0xFF;
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
