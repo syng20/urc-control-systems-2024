@@ -200,26 +200,28 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
         .length = 0,
         .payload = {},
       };
-      if (m_self_servo_addr == servo_address::wrist_right) {
-        request.id = m_self_servo_addr - 2; 
-      }
-      else {
-        request.id = m_self_servo_addr - 1; 
+      if (m_self_servo_addr != servo_address::shoulder_servo) {
+        if(m_self_servo_addr == servo_address::wrist_right) {
+          request.id = m_self_servo_addr - 2; 
+        }
+        else {
+          request.id = m_self_servo_addr - 1; 
+        } 
+        request.length = 3; 
+        request.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
+        request.payload[1] = static_cast<hal::byte>(m_self_servo_addr >> 8) & 0xFF; 
+        request.payload[2] = static_cast<hal::byte>(m_self_servo_addr >> 0) & 0xFF; 
+        m_mc_message_finder.transceiver().send(request);
+        // auto msg = m_mc_message_finder.find();
+        // if (msg) {
+        //   float prev_joint = 
+        //     fixed_to_floating_point_32(p_message.payload[2], p_message.payload[3], 
+        //           p_message.payload[4], p_message.payload[5],
+        //     p_message.payload[1]) * 360;
+        //   bldc->set_prev_joint_position(prev_joint); 
+        //   bldc->set_actual_position(); 
+        // }   
       } 
-      request.length = 3; 
-      request.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
-      request.payload[1] = static_cast<hal::byte>(m_self_servo_addr >> 8) & 0xFF; 
-      request.payload[2] = static_cast<hal::byte>(m_self_servo_addr >> 0) & 0xFF; 
-      m_mc_message_finder.transceiver().send(request);
-      // auto msg = m_mc_message_finder.find();
-      // if (msg) {
-      //   float prev_joint = 
-      //     fixed_to_floating_point_32(p_message.payload[2], p_message.payload[3], 
-      //           p_message.payload[4], p_message.payload[5],
-      //     p_message.payload[1]) * 360;
-      //   bldc->set_prev_joint_position(prev_joint); 
-      //   bldc->set_actual_position(); 
-      // }    
       break;
     }
     case action::set_position_reading: {
