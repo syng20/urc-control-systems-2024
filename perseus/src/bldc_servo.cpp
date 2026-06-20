@@ -289,7 +289,9 @@ void bldc_perseus::update_position(bool from_scratch)
   // }
   projected_power = std::clamp(projected_power, m_servo_values.low_clamped_value, m_servo_values.high_clamped_value);
   // if (m_actual_position > 0) {
-  //   projected_power = projected_power * -1; 
+  //   float t = m_servo_values.low_clamped_value; 
+  //   m_servo_values.low_clamped_value = m_servo_values.high_clamped_value * -1; 
+  //   m_servo_values.high_clamped_value = t * -1; 
   // }
   hal::print<128>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
   m_reading.power = projected_power; 

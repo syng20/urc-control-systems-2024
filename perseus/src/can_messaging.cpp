@@ -462,6 +462,9 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
                 p_message.payload[4], p_message.payload[5],
           p_message.payload[1])
         );
+      // if (m_self_servo_addr == wrist_left){ 
+      //   prev_joint_pos = prev_joint_pos * -1; 
+      // 
       bldc->set_prev_joint_position(prev_joint_pos);
       bldc->set_actual_position();
       hal::print<64>(*console, "prev_pos = %f\n", prev_joint_pos);
