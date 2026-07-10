@@ -11,26 +11,12 @@
 #include <can_messaging.hpp>
 #include <resource_list.hpp>
 
-#include "can_test_copy.cpp"
+#include "perseus_can_demo.cpp"
 
 
 using namespace std::chrono_literals;
 namespace sjsu::perseus {
 
-enum servo_address : hal::u16
-{
-track_servo = 0x121,
-  shoulder_servo = 0x122,
-  elbow_servo = 0x123,
-  wrist_left = 0x124,
-  wrist_right = 0x125,
-    clamp = 0x126,
-};
-
-// each rotation of the output shaft of the track servo is 8 mm of linear travel
-// so 1 degree of rotation is 8mm / 360 = 0.0222 mm of linear travel
-// 188:1 is for shoulder servo 5281.1 * 28
-// 188:1 elbow 1-2 reduction. 5281.1 * 2
 void application()
 {
   using namespace hal::literals;
@@ -41,7 +27,7 @@ void application()
   auto console = resources::console();
   // CHANGE SERVO
   // shoulder
-  constexpr servo_address allowed_id = shoulder_servo; 
+  constexpr can_perseus::servo_address allowed_id = can_perseus::shoulder_servo; 
   // pid
   bldc_perseus::PID_settings pid_settings = {
     .kp = 0.5,
@@ -59,7 +45,27 @@ void application()
     .high_clamped_value = 0.3, 
     .low_clamped_value = -0.3 
   }; 
+  // bldc
+  auto h_bridge = resources::h_bridge();
+  auto encoder = resources::encoder();
+  bldc_perseus servo(h_bridge, encoder);
+  hal::print(*console, "BLDC Servo created...\n");
+  auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
+  servo_ptr->update_pid_position(pid_settings);
+  servo_ptr->set_servo_values(servo_values); 
+  servo_ptr->set_actual_position();
+  // can
+  auto can_transceiver = resources::can_transceiver();
+  auto can_bus_manager = resources::can_bus_manager();
+  auto can_interrupt = resources::can_interrupt();
+  auto can_id_filter = resources::can_identifier_filter();
+  static constexpr auto baudrate = 1_MHz;
+  can_perseus servo_can(allowed_id, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
+  auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
+  hal::print(*console, "Servo can creature setup...\n");
+  
+  // Starting 
   hal::print(*console, "Starting Shoulder\n");
-  can_application(allowed_id, pid_settings, servo_values);   
+  can_application(servo_ptr, can_ptr);   
 }
 }  // namespace sjsu::perseus
