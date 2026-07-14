@@ -37,11 +37,8 @@ void application()
   // servo_values 
   bldc_perseus::servo_values servo_values = {
     .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
-    .feedforward_clamp = 0,
-    .length = 0, 
     .angle_offset = 0, 
-    .weight_beam = 0, 
-    .weight_end = 0, 
+    .fight_gravity = 0, 
     .high_clamped_value = 0.3, 
     .low_clamped_value = -0.3 
   }; 

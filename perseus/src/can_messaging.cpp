@@ -482,7 +482,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
   hal::print<64>(*console, "finished transmission\n");
 }
 
-void can_perseus::repeating_action_can(uint32_t curr_action, 
+void can_perseus::periodic_action(uint32_t curr_action, 
                         hal::v5::strong_ptr<bldc_perseus> bldc) {
   auto console = resources::console(); 
   float exponent = 14;

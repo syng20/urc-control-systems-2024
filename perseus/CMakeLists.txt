@@ -38,7 +38,7 @@ SOURCES
     src/bldc_servo.cpp
     ../drivers/src/serial_commands.cpp
     src/can_messaging.cpp
-    applications/can_test_copy.cpp
+    applications/perseus_can_demo.cpp
     
 PACKAGES
     #Template for importing libhal packages is "libhal-__device__"

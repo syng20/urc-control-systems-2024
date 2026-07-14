@@ -79,7 +79,7 @@ public:
     hal::i16 floating_to_fixed_point_16(float n, int exponent); 
     void process_can_message(hal::can_message const& p_message,
                         hal::v5::strong_ptr<bldc_perseus> bldc);
-    void repeating_action_can(uint32_t curr_action, 
+    void periodic_action(uint32_t curr_action, 
                         hal::v5::strong_ptr<bldc_perseus> bldc); 
     std::optional<hal::can_message> check_for_mc_message(); 
     std::optional<hal::can_message> check_for_joint_message(); 

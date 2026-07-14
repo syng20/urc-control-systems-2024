@@ -38,58 +38,18 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   m_PID_prev_velocity_values = {
     .integral = 0, 
     .last_error = 0, 
-    .prev_dt_time = 0.0 
+    .prev_timestamp = 0.0 
   };
   m_PID_prev_position_values = { 
     .integral = 0,              
     .last_error = 0,
-    .prev_dt_time = 0.0 
+    .prev_timestamp = 0.0 
   };
-  // CHANGE SERVO
-  // // elbow 
-  // m_servo_values = {
-  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-  //   .feedforward_clamp = 0.2, 
-  //   .length = 0.4826, 
-  //   .angle_offset = 0, 
-  //   .weight_beam = 1000, 
-  //   .weight_end = 600 
-  // }; 
-  // // shoulder 
-  // m_servo_values = {
-  //   .gear_ratio = 73935.4, // 5281.1 * 28 / 2
-  //   .feedforward_clamp = 0, 
-  //   .length = 0.5715, 
-  //   .angle_offset = 0, 
-  //   .weight_beam = 1600, 
-  //   .weight_end = 1600 
-  // }; 
-  // // wrist 
-  // m_servo_values = {
-  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
-  //   .feedforward_clamp = 0.2,
-  //   .length = 0.762, 
-  //   .angle_offset = 0, 
-  //   .weight_beam = 500, 
-  //   .weight_end = 100 
-  // }; 
-  // track 
-  // m_servo_values = {
-  //   .gear_ratio = 16915.5, // 751.8 * 1 / 2 * 360 / 8 (for mm) 
-  //   .feedforward_clamp = 0,
-  //   .length = 0, 
-  //   .angle_offset = 0, 
-  //   .weight_beam = 0, 
-  //   .weight_end = 0 
-  // }; 
   // default 
   m_servo_values = {
     .gear_ratio = 0.01, 
-    .feedforward_clamp = 0.01, 
-    .length = 0.01, 
     .angle_offset = 0.01, 
-    .weight_beam = 0.01, 
-    .weight_end = 0.01, 
+    .fight_gravity = 0.01, 
     .high_clamped_value = 0.01, 
     .low_clamped_value = -0.01 
   }; 
@@ -218,10 +178,10 @@ void bldc_perseus::reset_time()
 {
   m_PID_prev_velocity_values = { .integral = 0,
                                  .last_error = 0,
-                                 .prev_dt_time = 0.0 };
+                                 .prev_timestamp = 0.0 };
   m_PID_prev_position_values = { .integral = 0,
                                  .last_error = 0,
-                                 .prev_dt_time = 0.0 };
+                                 .prev_timestamp = 0.0 };
   m_last_clock_check = m_clock->uptime();
 }
 
@@ -262,7 +222,7 @@ void bldc_perseus::update_position(bool from_scratch)
   set_actual_position(); 
   float error = m_target.position - m_actual_position;
   sec curr_time = hal_time_duration_to_sec(get_clock_time(*m_clock));
-  sec dt = curr_time - m_PID_prev_position_values.prev_dt_time;
+  sec dt = curr_time - m_PID_prev_position_values.prev_timestamp;
   if (from_scratch) { 
     m_PID_prev_position_values.integral = 0.0f; 
   }
@@ -272,7 +232,7 @@ void bldc_perseus::update_position(bool from_scratch)
   float iTerm  = m_reading_position_settings.ki * m_PID_prev_position_values.integral; 
   float dTerm = m_reading_position_settings.kd * derivative; 
   m_PID_prev_position_values.last_error = error; 
-  m_PID_prev_position_values.prev_dt_time = curr_time;
+  m_PID_prev_position_values.prev_timestamp = curr_time;
   float pid_sum = pTerm + iTerm + dTerm;
   // feed forward 
   float feedforward = bldc_perseus::position_feedforward(); 
@@ -302,7 +262,7 @@ void bldc_perseus::update_position(bool from_scratch)
 float bldc_perseus::position_feedforward() 
 {
   return std::sin(std::numbers::pi/180 * m_actual_position) 
-    * m_servo_values.feedforward_clamp; 
+    * m_servo_values.fight_gravity; 
 }
 
 void bldc_perseus::set_prev_joint_position(float prev_joint_pos) {
@@ -325,19 +285,14 @@ void bldc_perseus::set_servo_values(servo_values p_servo_values) {
   m_servo_values = p_servo_values; 
 }
 
-void bldc_perseus::repeating_action_bldc(bool new_action) {
+void bldc_perseus::periodic_action(bool new_action) {
   switch (static_cast<can_perseus::action>(m_reading_action)) {
     case can_perseus::action::homing: {
       bldc_perseus::home_encoder(); 
       break; 
     }
     case can_perseus::action::set_position_target: {
-      if (new_action) {
-        bldc_perseus::update_position(1); 
-      }
-      else {
-        bldc_perseus::update_position(0); 
-      }
+      bldc_perseus::update_position(new_action); 
       break;
     }
     default:

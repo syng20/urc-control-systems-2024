@@ -51,7 +51,7 @@ public:
   {
     float integral; 
     float last_error; 
-    float prev_dt_time; 
+    float prev_timestamp; 
   }; 
   /**
     * @brief Struct for the values that are individual to each servo.
@@ -61,11 +61,8 @@ public:
     // for reading value 
     float gear_ratio; 
     // for feedforward 
-    float feedforward_clamp; // power needed to keep position at max gravity
-    float length; 
     float angle_offset; 
-    float weight_beam; 
-    float weight_end; 
+    float fight_gravity; 
     // for safety
     float high_clamped_value; 
     float low_clamped_value; 
@@ -228,7 +225,7 @@ public:
   */
   bldc_perseus::PID_settings get_pid_settings();
 
-  void repeating_action_bldc(bool new_action);
+  void periodic_action(bool new_action);
 
   // Helper conversion functions (copied from drivetrain_math.hpp)
   constexpr hal::time_duration sec_to_hal_time_duration(sec p_time)
