@@ -18,7 +18,7 @@ project(demos LANGUAGES CXX)
 
 libhal_build_demos(
   DEMOS
-    # application
+    application
     # can_test
     # can_test_wrist
     can_test_elbow 
@@ -26,6 +26,7 @@ libhal_build_demos(
     can_test_track
     can_test_wrist_l
     can_test_wrist_r
+    can_test_endeff
 
   
   INCLUDES

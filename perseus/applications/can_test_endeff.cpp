@@ -26,25 +26,17 @@ void application()
   auto clock = resources::clock();
   auto console = resources::console();
   // CHANGE SERVO
-  // wrist_right 
-  constexpr can_perseus::servo_address allowed_id = can_perseus::wrist_right; 
+  // track 
+  constexpr can_perseus::servo_address allowed_id = can_perseus::clamp; 
   // pid
-    bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.005,
-    .ki = 0.00,
-    .kd = 0.00,
+  bldc_perseus::PID_settings pid_settings = {
+    .kp = 0.5, 
+    .ki = 0.00, 
+    .kd = 0.05,
   };
   // servo_values 
-  // bldc_perseus::servo_values servo_values = {
-  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
-  //   .angle_offset = 0, 
-  //   .fight_gravity = 0.2, 
-  //   .high_clamped_value = 0.3, 
-  //   .low_clamped_value = -0.3 
-  // }; 
-  // IF EE DOESN'T GET ATTACHED
   bldc_perseus::servo_values servo_values = {
-    .gear_ratio = 2640.55, // 5281.1 * 1 / 2
+    .gear_ratio = 73935.4, // 5281.1 * 28 / 2
     .angle_offset = 0, 
     .fight_gravity = 0, 
     .high_clamped_value = 0.3, 
@@ -70,7 +62,7 @@ void application()
   hal::print(*console, "Servo can creature setup...\n");
   
   // Starting 
-  hal::print(*console, "Starting Wrist Right\n");
+  hal::print(*console, "Starting Track\n");
   can_application(servo_ptr, can_ptr); 
   
 }

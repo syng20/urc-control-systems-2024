@@ -36,9 +36,19 @@ void application()
   hal::print(*console, "BLDC Servo created...\n");
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   
+  bldc_perseus::servo_values servo_values = {
+    .gear_ratio = 73935.4, // 5281.1 * 28 / 2
+    .angle_offset = 0, 
+    .fight_gravity = 0, 
+    .high_clamped_value = 0.3, 
+    .low_clamped_value = -0.3 
+  }; 
+  servo_ptr->set_servo_values(servo_values); 
+
+
   while(true) {
   
-    // servo_ptr->set_power(0.3); 
+    servo_ptr->set_power(0.3); 
     // hal::delay(*clock, 5000ms);
     // hal::print(*console, "Switch -0.3\n");
     // servo_ptr->set_power(-0.3); 

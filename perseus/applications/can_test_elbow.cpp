@@ -35,10 +35,18 @@ void application()
     .kd = 0.005,
   };
   // servo_values 
+  // bldc_perseus::servo_values servo_values = {
+  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+  //   .angle_offset = 0, 
+  //   .fight_gravity = 0.2, 
+  //   .high_clamped_value = -0.00001, 
+  //   .low_clamped_value = -0.3 
+  // }; 
+  // IF EE DOESN'T GET ATTACHED
   bldc_perseus::servo_values servo_values = {
     .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-    .angle_offset = 0, 
-    .fight_gravity = 0.2, 
+    .angle_offset = -20, 
+    .fight_gravity = 0.1, 
     .high_clamped_value = -0.00001, 
     .low_clamped_value = -0.3 
   }; 
