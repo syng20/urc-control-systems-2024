@@ -35,21 +35,21 @@ void application()
     .kd = 0.00,
   };
   // servo_values 
-  // bldc_perseus::servo_values servo_values = {
-  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
-  //   .angle_offset = 0, 
-  //   .fight_gravity = 0.2, 
-  //   .high_clamped_value = 0.3, 
-  //   .low_clamped_value = -0.3 
-  // }; 
-  // IF EE DOESN'T GET ATTACHED
   bldc_perseus::servo_values servo_values = {
     .gear_ratio = 2640.55, // 5281.1 * 1 / 2
     .angle_offset = 0, 
-    .fight_gravity = 0, 
+    .fight_gravity = 0.2, 
     .high_clamped_value = 0.3, 
     .low_clamped_value = -0.3 
   }; 
+  // // IF EE DOESN'T GET ATTACHED
+  // bldc_perseus::servo_values servo_values = {
+  //   .gear_ratio = 2640.55, // 5281.1 * 1 / 2
+  //   .angle_offset = 0, 
+  //   .fight_gravity = 0, 
+  //   .high_clamped_value = 0.3, 
+  //   .low_clamped_value = -0.3 
+  // }; 
   // bldc
   auto h_bridge = resources::h_bridge();
   auto encoder = resources::encoder();
@@ -61,6 +61,7 @@ void application()
   servo_ptr->set_actual_position();
   // can
   auto can_transceiver = resources::can_transceiver();
+  hal::print(*console, "CANCAN...\n");
   auto can_bus_manager = resources::can_bus_manager();
   auto can_interrupt = resources::can_interrupt();
   auto can_id_filter = resources::can_identifier_filter();

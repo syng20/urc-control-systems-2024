@@ -30,9 +30,9 @@ void application()
   constexpr can_perseus::servo_address allowed_id = can_perseus::clamp; 
   // pid
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.5, 
+    .kp = 0.05, 
     .ki = 0.00, 
-    .kd = 0.05,
+    .kd = 0.1,
   };
   // servo_values 
   bldc_perseus::servo_values servo_values = {

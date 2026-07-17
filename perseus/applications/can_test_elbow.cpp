@@ -29,27 +29,32 @@ void application()
   // elbow
   constexpr can_perseus::servo_address allowed_id = can_perseus::elbow_servo; 
   // pid
+  // bldc_perseus::PID_settings pid_settings = {
+  //   .kp = 0.02, 
+  //   .ki = 0.00, 
+  //   .kd = 0.005,
+  // };
   bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.02, 
+    .kp = 0.01, 
     .ki = 0.00, 
     .kd = 0.005,
   };
   // servo_values 
-  // bldc_perseus::servo_values servo_values = {
-  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-  //   .angle_offset = 0, 
-  //   .fight_gravity = 0.2, 
-  //   .high_clamped_value = -0.00001, 
-  //   .low_clamped_value = -0.3 
-  // }; 
-  // IF EE DOESN'T GET ATTACHED
   bldc_perseus::servo_values servo_values = {
     .gear_ratio = 5281.1, // 5281.1 * 2 / 2
-    .angle_offset = -20, 
-    .fight_gravity = 0.1, 
-    .high_clamped_value = -0.00001, 
+    .angle_offset = 0, 
+    .fight_gravity = 0.15, 
+    .high_clamped_value = 0, 
     .low_clamped_value = -0.3 
   }; 
+  // // IF EE DOESN'T GET ATTACHED
+  // bldc_perseus::servo_values servo_values = {
+  //   .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+  //   .angle_offset = -20, 
+  //   .fight_gravity = 0.1, 
+  //   .high_clamped_value = 0.3, 
+  //   .low_clamped_value = -0.3 
+  // }; 
   // bldc
   auto h_bridge = resources::h_bridge();
   auto encoder = resources::encoder();

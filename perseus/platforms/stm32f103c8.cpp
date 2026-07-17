@@ -198,6 +198,7 @@ void initialize_can()
   constexpr hal::u32 baudrate = 1'000'000;
   if (not can_manager) {
     auto clock_ref = clock();
+    hal::print(*console_ptr, "Tiny Drivers Box\n");
     can_manager =
       hal::v5::make_strong_ptr<hal::stm32f1::can_peripheral_manager_v2>(
         driver_allocator(),
@@ -207,12 +208,14 @@ void initialize_can()
         *clock_ref,
         std::chrono::milliseconds(1),
         hal::stm32f1::can_pins::pb9_pb8);
+    hal::print(*console_ptr, "Tiny Drivers Box\n");
     auto f = hal::acquire_can_mask_filter(driver_allocator(), can_manager);
     hal::can_mask_filter::pair p;
     p.id = 0;
     p.mask = 0;
     can_mask[0] = f[0];
     can_mask[1] = f[1];
+    hal::print(*console_ptr, "Tiny Drivers Box\n");
     can_mask.at(0)->allow(p);
   }
 }

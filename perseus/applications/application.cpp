@@ -48,7 +48,7 @@ void application()
 
   while(true) {
   
-    servo_ptr->set_power(0.3); 
+    // servo_ptr->set_power(-0.2f); 
     // hal::delay(*clock, 5000ms);
     // hal::print(*console, "Switch -0.3\n");
     // servo_ptr->set_power(-0.3); 

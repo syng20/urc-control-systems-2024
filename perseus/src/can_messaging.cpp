@@ -200,13 +200,14 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
         .length = 0,
         .payload = {},
       };
-      if (m_self_servo_addr != servo_address::shoulder_servo) {
-        if(m_self_servo_addr == servo_address::wrist_right) {
-          request.id = m_self_servo_addr - 2; 
-        }
-        else {
-          request.id = m_self_servo_addr - 1; 
-        } 
+      // if ((m_self_servo_addr != servo_address::shoulder_servo) && (m_self_servo_addr != servo_address::clamp)) {
+      //   if(m_self_servo_addr == servo_address::wrist_right) {
+      //     request.id = m_self_servo_addr - 2; 
+      //   }
+      //   else {
+      //     request.id = m_self_servo_addr - 1; 
+      //   } 
+      if (m_self_servo_addr == servo_address::elbow_servo) {
         request.length = 3; 
         request.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
         request.payload[1] = static_cast<hal::byte>(m_self_servo_addr >> 8) & 0xFF; 
@@ -270,7 +271,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       hal::i16 t = static_cast<hal::i16>(floating_to_fixed_point_16(bldc->get_power(), 0)); 
       response.id = m_self_servo_addr + 0x100;
       response.length = 4;
-      response.payload[0] = static_cast<hal::byte>(action::set_velocity_target);
+      response.payload[0] = static_cast<hal::byte>(action::set_power);
       if (t < 0) {
         response.payload[1] = static_cast<hal::byte>(-1); 
       }
