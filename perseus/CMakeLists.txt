@@ -40,6 +40,7 @@ SOURCES
     ../drivers/src/serial_commands.cpp
     src/can_messaging.cpp
     applications/perseus_can_demo.cpp
+    src/switches.cpp
     
 PACKAGES
     #Template for importing libhal packages is "libhal-__device__"

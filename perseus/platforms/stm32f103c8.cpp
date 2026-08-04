@@ -177,18 +177,90 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
       // need to divide by ticks per rotation and gear ratio to get pure degrees or linear movement 
 }
 
-// hal::v5::strong_ptr<hal::output_pin> usart2_cts()
-// {
-//   auto pin = gpio_a().acquire_output_pin(1);
-//   return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
-//                                                  std::move(pin));
-// }
-// hal::v5::strong_ptr<hal::output_pin> tim2_ch2()
-// {
-//   auto pin = gpio_a().acquire_output_pin(0);
-//   return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
-//                                                  std::move(pin));
-// }
+// all the pins for the switches at the bottom of the pcb 
+hal::v5::optional_ptr<hal::input_pin> switch_g1_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g1()
+{
+  if (not switch_g1_ptr) {
+    auto switch_g1 = gpio_a().acquire_input_pin(15); 
+    switch_g1_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g1)>(
+        driver_allocator(), std::move(switch_g1));
+  }
+  return switch_g1_ptr;
+}
+hal::v5::optional_ptr<hal::input_pin> switch_g2_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g2()
+{
+  if (not switch_g2_ptr) {
+    auto switch_g2 = gpio_b().acquire_input_pin(3); 
+    switch_g2_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g2)>(
+        driver_allocator(), std::move(switch_g2));
+  }
+  return switch_g1_ptr;
+}
+hal::v5::optional_ptr<hal::input_pin> switch_g3_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g3()
+{
+  if (not switch_g3_ptr) {
+    auto switch_g3 = gpio_b().acquire_input_pin(4); 
+    switch_g3_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g3)>(
+        driver_allocator(), std::move(switch_g3));
+  }
+  return switch_g1_ptr;
+}
+hal::v5::optional_ptr<hal::input_pin> switch_g4_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g4()
+{
+  if (not switch_g4_ptr) {
+    auto switch_g4 = gpio_b().acquire_input_pin(12); 
+    switch_g4_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g4)>(
+        driver_allocator(), std::move(switch_g4));
+  }
+  return switch_g1_ptr;
+}
+hal::v5::optional_ptr<hal::input_pin> switch_g5_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g5()
+{
+  if (not switch_g5_ptr) {
+    auto switch_g5 = gpio_b().acquire_input_pin(13); 
+    switch_g5_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g5)>(
+        driver_allocator(), std::move(switch_g5));
+  }
+  return switch_g1_ptr;
+}
+hal::v5::optional_ptr<hal::input_pin> switch_g6_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g6()
+{
+  if (not switch_g6_ptr) {
+    auto switch_g6 = gpio_b().acquire_input_pin(14); 
+    switch_g6_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g6)>(
+        driver_allocator(), std::move(switch_g6));
+  }
+  return switch_g1_ptr;
+}
+hal::v5::optional_ptr<hal::input_pin> switch_g7_ptr;
+hal::v5::strong_ptr<hal::input_pin> switch_g7()
+{
+  if (not switch_g7_ptr) {
+    auto switch_g7 = gpio_b().acquire_input_pin(15); 
+    switch_g7_ptr =
+      hal::v5::make_strong_ptr<decltype(switch_g7)>(
+        driver_allocator(), std::move(switch_g7));
+  }
+  return switch_g1_ptr;
+}
+
+
+
+
+
+
 
 
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
