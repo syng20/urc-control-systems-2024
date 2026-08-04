@@ -65,9 +65,9 @@ void application()
   constexpr servo_address allowed_id_pitch = wrist_pitch; 
   constexpr servo_address allowed_id_roll = wrist_roll; 
   static constexpr auto baudrate = 1_MHz;
-  can_perseus pitch_can(allowed_id_pitch, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
+  can_perseus pitch_can(allowed_id_pitch, baudrate, can_transceiver, can_bus_manager,  can_id_filter); 
   auto pitch_can_ptr = hal::v5::make_strong_ptr<decltype(pitch_can)>(resources::driver_allocator(), std::move(pitch_can));
-  can_perseus roll_can(allowed_id_roll, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
+  can_perseus roll_can(allowed_id_roll, baudrate, can_transceiver, can_bus_manager,  can_id_filter); 
   auto roll_can_ptr = hal::v5::make_strong_ptr<decltype(pitch_can)>(resources::driver_allocator(), std::move(roll_can));
   hal::print(*console, "Servo can creature setup...\n");
   // bldc

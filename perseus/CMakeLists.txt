@@ -27,6 +27,7 @@ libhal_build_demos(
     can_test_wrist_l
     can_test_wrist_r
     can_test_endeff
+    switch_check
 
   
   INCLUDES
@@ -40,6 +41,7 @@ SOURCES
     ../drivers/src/serial_commands.cpp
     src/can_messaging.cpp
     applications/perseus_can_demo.cpp
+    src/switches.cpp
     
 PACKAGES
     #Template for importing libhal packages is "libhal-__device__"
