@@ -18,7 +18,6 @@ public:
         hal::u32 p_baudrate,
         hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
         hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
-        hal::v5::strong_ptr<hal::can_interrupt> p_can_interrupt,
         hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
     ); 
 
@@ -89,11 +88,8 @@ private:
     hal::u32 m_baudrate;
     hal::v5::strong_ptr<hal::can_transceiver> m_can_transceiver;
     hal::v5::strong_ptr<hal::can_bus_manager> m_can_bus_manager;
-    hal::v5::strong_ptr<hal::can_interrupt> m_can_interrupt;
     hal::v5::strong_ptr<hal::can_identifier_filter> m_can_identifier_filter;
     hal::can_message_finder m_mc_message_finder;
     hal::can_message_finder m_mc_all_message_finder;
-    // hal::can_message response;
-    // hal::can_message forward_to_next;
 }; 
 } // namespace sjsu::perseus

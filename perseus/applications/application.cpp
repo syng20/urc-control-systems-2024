@@ -48,16 +48,26 @@ void application()
 
   while(true) {
   
-    // servo_ptr->set_power(-0.2f); 
+    // servo_ptr->set_power(-0.5); 
     // hal::delay(*clock, 5000ms);
     // hal::print(*console, "Switch -0.3\n");
     // servo_ptr->set_power(-0.3); 
     // hal::delay(*clock, 5000ms);
     // hal::print(*console, "Switch 0.3\n");
   
-    hal::print<64> (*console, "position: %f\n", servo_ptr->get_reading_position());
+    hal::print<64> (*console, "position: %f\n", servo_ptr->get_actual_position());
     hal::delay(*clock,100ms);
 
+  // auto e_pin1 = resources::usart2_cts(); 
+  // auto e_pin2 = resources::tim2_ch2(); 
+  // while(true){
+
+  //   e_pin1->level(true); 
+  //   e_pin2->level(false); 
+  //   hal::delay(*clock,5000ms);
+  //   e_pin1->level(false); 
+  //   e_pin2->level(true); 
+  //   hal::delay(*clock,5000ms);
   }
 
 }

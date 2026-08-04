@@ -21,7 +21,6 @@ can_perseus::can_perseus(
     hal::u32 p_baudrate,
     hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
     hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
-    hal::v5::strong_ptr<hal::can_interrupt> p_can_interrupt,
     hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
   ) 
   : 
@@ -29,7 +28,6 @@ can_perseus::can_perseus(
     m_baudrate(p_baudrate),
     m_can_transceiver(p_can_transceiver),
     m_can_bus_manager(p_can_bus_manager),
-    m_can_interrupt(p_can_interrupt),
     m_can_identifier_filter(p_can_identifier_filter), 
     m_mc_message_finder(hal::can_message_finder(*m_can_transceiver, m_self_servo_addr)),
     m_mc_all_message_finder(hal::can_message_finder(*m_can_transceiver, 0x110))
@@ -37,33 +35,11 @@ can_perseus::can_perseus(
   auto console = resources::console();
   m_can_identifier_filter->allow(m_self_servo_addr);
   m_can_bus_manager->baud_rate(m_baudrate); 
-  // m_can_interrupt->on_receive([&console](hal::can_interrupt::on_receive_tag,
-  //                                      hal::can_message const& p_message) {
-  //                                         hal::print<64>(
-  //                                           *console, 
-  //                                           "Can message with id = 0x%lX from interrupt!\n", 
-  //                                           p_message.id);
-  // }); 
   hal::print<32>(*console,
                  "Receiver buffer size = %zu\n",
                  m_can_transceiver->receive_buffer().size());
   hal::print<64>(
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", m_self_servo_addr);
-    
-  // response = hal::can_message {
-  //   .id = 0x000,
-  //   .extended=false,
-  //   .remote_request=false,
-  //   .length = 0,
-  //   .payload = {},
-  // };
-  // forward_to_next = hal::can_message {
-  //   .id = 0x000,
-  //   .extended=false,
-  //   .remote_request=false,
-  //   .length = 0,
-  //   .payload = {},
-  // };
   
 };
 
@@ -84,7 +60,7 @@ float can_perseus::fixed_to_floating_point_16(hal::byte b0, hal::byte b1, int ex
   hal::print<64>(*console, "float cast: %f\n", shifted); 
   return shifted; 
 }
-// floating point to movement 
+// floating point to position 
 float can_perseus::floating_to_position(float floating) {
   if (m_self_servo_addr == servo_address::track_servo) {
     return floating * 30; 
@@ -116,9 +92,6 @@ hal::i16 can_perseus::floating_to_fixed_point_16(float n, int exponent) {
   return(shifted);
   // return (static_cast<hal::i16>(n) << exponent); 
 }
-
-// convert from fraction to 
-
 
 
 void can_perseus::print_can_message(hal::serial& p_console,
@@ -155,21 +128,21 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
     // major 
     case action::power_off_reset:{
       bldc->stop(); 
-      bldc->set_reading_action(static_cast<uint32_t>(action::power_off_reset)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::power_off_reset)); 
       break;
     }
     case action::heartbeat: {
       response.id = m_self_servo_addr + 0x100;
       response.length = 1;
       response.payload[0] = m_self_servo_addr + 0x50;
-      bldc->set_reading_action(static_cast<uint32_t>(action::heartbeat)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::heartbeat)); 
       break; 
     }
     case action::homing: {
       response.id = m_self_servo_addr + 0x100;
       response.length = 1;
       response.payload[0] = 0x11;
-      bldc->set_reading_action(static_cast<uint32_t>(action::homing)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::homing)); 
       break; 
     }
     // setters 
@@ -190,7 +163,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::set_position_target)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::set_position_target)); 
       
       // get previous joint's target position 
       hal::can_message request {
@@ -213,15 +186,6 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
         request.payload[1] = static_cast<hal::byte>(m_self_servo_addr >> 8) & 0xFF; 
         request.payload[2] = static_cast<hal::byte>(m_self_servo_addr >> 0) & 0xFF; 
         m_mc_message_finder.transceiver().send(request);
-        // auto msg = m_mc_message_finder.find();
-        // if (msg) {
-        //   float prev_joint = 
-        //     fixed_to_floating_point_32(p_message.payload[2], p_message.payload[3], 
-        //           p_message.payload[4], p_message.payload[5],
-        //     p_message.payload[1]) * 360;
-        //   bldc->set_prev_joint_position(prev_joint); 
-        //   bldc->set_actual_position(); 
-        // }   
       } 
       break;
     }
@@ -231,8 +195,9 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
                 p_message.payload[4], p_message.payload[5],
           p_message.payload[1]) 
         );
-      bldc->set_reading_position(reading_position);
-      hal::i32 t = floating_to_fixed_point_32(position_to_floating(bldc->get_reading_position()), p_message.payload[1]); 
+      float new_angle_offset = bldc->get_actual_position() - reading_position + bldc->get_angle_offset(); 
+      bldc->set_angle_offset(new_angle_offset); 
+      hal::i32 t = floating_to_fixed_point_32(position_to_floating(bldc->get_actual_position()), p_message.payload[1]); 
       hal::print<64>(*console, "reading = %f\n", reading_position);
       response.id = m_self_servo_addr + 0x100;
       response.length = 6;
@@ -242,7 +207,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::set_position_reading)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::set_position_reading)); 
       break;
     }
     case action::set_velocity_target: {
@@ -262,7 +227,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::set_velocity_target)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::set_velocity_target)); 
       break;
     }
     case action::set_power: {
@@ -280,7 +245,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       }
       response.payload[2] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[3] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::set_power)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::set_power)); 
       break; 
     }
     case action::set_pid_position_config: {
@@ -304,7 +269,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[5] = static_cast<hal::byte>(t_ki >> 0) & 0xFF;
       response.payload[6] = static_cast<hal::byte>(t_kd >> 8) & 0xFF;
       response.payload[7] = static_cast<hal::byte>(t_kd >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::set_pid_position_config)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::set_pid_position_config)); 
       break;
     }
     case action::set_pid_velocity_config: {
@@ -328,7 +293,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[5] = static_cast<hal::byte>(t_ki >> 0) & 0xFF;
       response.payload[6] = static_cast<hal::byte>(t_kd >> 8) & 0xFF;
       response.payload[7] = static_cast<hal::byte>(t_kd >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::set_pid_velocity_config)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::set_pid_velocity_config)); 
       break;
     }
     // readers 
@@ -344,12 +309,12 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_position_target)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_position_target)); 
       break;
     }
     case action::read_position_reading: {
       float exponent = 14.0; 
-      hal::i32 t = floating_to_fixed_point_32(position_to_floating(bldc->get_reading_position()), exponent); 
+      hal::i32 t = floating_to_fixed_point_32(position_to_floating(bldc->get_actual_position()), exponent); 
       hal::print<64>(*console, "reading = %i\n", t);
       response.id = m_self_servo_addr + 0x100;
       response.length = 6;
@@ -359,7 +324,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_position_reading)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_position_reading)); 
       break;
     }
     case action::read_velocity_target: {
@@ -373,7 +338,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_velocity_target)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_velocity_target)); 
       break;
     }
     case action::read_velocity_reading: {
@@ -387,7 +352,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[3] = static_cast<hal::byte>(t >> 16) & 0xFF;
       response.payload[4] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[5] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_velocity_reading)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_velocity_reading)); 
       break;
     }
     case action::read_power: {
@@ -403,7 +368,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       }
       response.payload[2] = static_cast<hal::byte>(t >> 8) & 0xFF;
       response.payload[3] = static_cast<hal::byte>(t >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_power)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_power)); 
       break;
     }
     case action::read_pid_position_config: {
@@ -421,7 +386,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[5] = static_cast<hal::byte>(t_ki >> 0) & 0xFF;
       response.payload[6] = static_cast<hal::byte>(t_kd >> 8) & 0xFF;
       response.payload[7] = static_cast<hal::byte>(t_kd >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_pid_position_config)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_pid_position_config)); 
       break;
     }
     case action::read_pid_velocity_config: {
@@ -439,7 +404,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       response.payload[5] = static_cast<hal::byte>(t_ki >> 0) & 0xFF;
       response.payload[6] = static_cast<hal::byte>(t_kd >> 8) & 0xFF;
       response.payload[7] = static_cast<hal::byte>(t_kd >> 0) & 0xFF;
-      bldc->set_reading_action(static_cast<uint32_t>(action::read_pid_velocity_config)); 
+      bldc->set_active_action(static_cast<uint32_t>(action::read_pid_velocity_config)); 
       break;
     } 
     case action::prev_joint_actual_position: {
@@ -487,7 +452,7 @@ void can_perseus::periodic_action(uint32_t curr_action,
                         hal::v5::strong_ptr<bldc_perseus> bldc) {
   auto console = resources::console(); 
   float exponent = 14;
-  hal::i32 t = floating_to_fixed_point_32(bldc->get_reading_position() / 360, exponent);
+  hal::i32 t = floating_to_fixed_point_32(position_to_floating(bldc->get_actual_position()), exponent);
   bldc->get_pid_settings();
   hal::can_message response {
     .id = 0x000,

@@ -176,6 +176,21 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
       // returns ticks multiplied by 360 degrees 
       // need to divide by ticks per rotation and gear ratio to get pure degrees or linear movement 
 }
+
+// hal::v5::strong_ptr<hal::output_pin> usart2_cts()
+// {
+//   auto pin = gpio_a().acquire_output_pin(1);
+//   return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
+//                                                  std::move(pin));
+// }
+// hal::v5::strong_ptr<hal::output_pin> tim2_ch2()
+// {
+//   auto pin = gpio_a().acquire_output_pin(0);
+//   return hal::v5::make_strong_ptr<decltype(pin)>(driver_allocator(),
+//                                                  std::move(pin));
+// }
+
+
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {
   // auto a_low = resources::pwm0_a8();

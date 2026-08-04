@@ -54,15 +54,15 @@ void can_application(hal::v5::strong_ptr<bldc_perseus> servo_ptr, hal::v5::stron
     if (msg) {
       print_can_message(*console, *msg);
       can_ptr->process_can_message(*msg, servo_ptr); 
-      hal::print<64>(*console, "Action: %x \n", servo_ptr->get_reading_action());
+      hal::print<64>(*console, "Action: %x \n", servo_ptr->get_active_action());
       new_action = true; 
     }
 
     // continue action 
-    if(servo_ptr->get_reading_action() != 0) {
+    if(servo_ptr->get_active_action() != 0) {
       if (delay_counter >= 6) {
         delay_counter = 0;
-        // can_ptr->repeating_action_can(servo_ptr->get_reading_action(), servo_ptr); 
+        can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
       }
       servo_ptr->periodic_action(new_action); 
     }

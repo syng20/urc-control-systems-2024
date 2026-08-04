@@ -22,18 +22,12 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
   , m_clock(resources::clock())
 {
   m_last_clock_check = m_clock->uptime(); 
-
-  m_reading = {
-    .position = 0,
-    .power = 0, 
-    .velocity = 0,  
-  };
+  m_active_power = 0; 
   m_target = { 
     .position = 0, 
     .power = 0.0f , 
     .velocity = 0
   };
-  // m_clamped_power = 0.3;
   m_prev_encoder_value = bldc_perseus::read_angle();
   m_PID_prev_velocity_values = {
     .integral = 0, 
@@ -56,7 +50,7 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
 // CHANGE SERVO
   m_actual_position = m_servo_values.angle_offset;  
   m_prev_joint_position = 0; 
-  m_reading_action = 0x000; 
+  m_active_action = 0x000; 
 }
 
 void bldc_perseus::set_target_position(float target_position)
@@ -69,18 +63,18 @@ float bldc_perseus::get_target_position()
   return m_target.position;
 }
 
-float bldc_perseus::get_reading_position()
-{
-  m_reading.position = bldc_perseus::read_angle();
-  return m_reading.position;
-}
+// float bldc_perseus::get_reading_position()
+// {
+//   m_reading.position = bldc_perseus::read_angle();
+//   return m_reading.position;
+// }
 
-void bldc_perseus::set_reading_position(float position)
-{
-  m_reading.position = position;
-  auto console = resources::console(); 
-  hal::print(*console, "\nHH\n"); 
-}
+// void bldc_perseus::set_reading_position(float position)
+// {
+//   m_reading.position = position;
+//   auto console = resources::console(); 
+//   hal::print(*console, "\nHH\n"); 
+// }
 
 void bldc_perseus::set_target_velocity(float target_velocity)
 {
@@ -94,53 +88,29 @@ float bldc_perseus::get_target_velocity()
 float bldc_perseus::get_reading_velocity()
 {
   // TODO! 
-  return m_reading.velocity;
+  return 0;
 }
 
 float bldc_perseus::get_power() {
-  return m_reading.power;
+  return m_active_power;
 }
 
 void bldc_perseus::set_power(float power) {
-  m_reading.power = power; 
-  m_h_bridge->power(m_reading.power);
+  m_active_power = power; 
+  m_h_bridge->power(m_active_power);
 }
 
-void bldc_perseus::set_reading_action(uint32_t action) {
-  m_reading_action = action; 
+void bldc_perseus::set_active_action(uint32_t action) {
+  m_active_action = action; 
 } 
-  
-uint32_t bldc_perseus::get_reading_action() {
-  return m_reading_action; 
-}
 
-void bldc_perseus::freeze() {
-  bldc_perseus::PID_settings pos_saved = {
-    .kp = m_reading_position_settings.kp,
-    .ki = m_reading_position_settings.ki,
-    .kd = m_reading_position_settings.kd
-  };
-  bldc_perseus::PID_settings vel_saved = {
-    .kp = m_reading_velocity_settings.kp,
-    .ki = m_reading_velocity_settings.ki,
-    .kd = m_reading_velocity_settings.kd
-  };
-  bldc_perseus::PID_settings hard_stop = {
-    .kp = 0,
-    .ki = 0,
-    .kd = 0
-  };
-  update_pid_position(hard_stop);
-  // SET FOR ELBOW RIGHT NOW
-  // FIX FOR OTHERS
-  update_position(1); 
-  update_pid_position(pos_saved); 
-  update_pid_position(vel_saved); 
+uint32_t bldc_perseus::get_active_action() {
+  return m_active_action; 
 }
 
 void bldc_perseus::stop()
 {
-  m_reading.power = 0.0f;
+  m_active_power = 0; 
   m_h_bridge->power(0.0f);
 }
 
@@ -160,8 +130,6 @@ void bldc_perseus::update_pid_velocity(PID_settings settings)
 void bldc_perseus::home_encoder()
 {
   // TODO!
-  home_encoder_value = read_angle();
-  m_reading.position = 0;
 }
 
 hal::degrees bldc_perseus::read_angle() {
@@ -199,13 +167,6 @@ void bldc_perseus::set_neg_clamped_power(float power)
 float bldc_perseus::get_neg_clamped_power() {
   return m_servo_values.low_clamped_value; 
 }
-// void bldc_perseus::set_pid_clamped_power(float power)
-// {
-//   m_clamped_power = power; 
-// }
-// float bldc_perseus::get_pid_clamped_power() {
-//   return m_clamped_power; 
-// }
 
 hal::time_duration bldc_perseus::get_clock_time(hal::steady_clock& p_clock)
 {
@@ -218,7 +179,6 @@ void bldc_perseus::update_position(bool from_scratch)
 {
   auto console = resources::console(); 
   // pid portion
-  m_reading.position = bldc_perseus::read_angle();
   set_actual_position(); 
   float error = m_target.position - m_actual_position;
   sec curr_time = hal_time_duration_to_sec(get_clock_time(*m_clock));
@@ -254,8 +214,8 @@ void bldc_perseus::update_position(bool from_scratch)
   //   m_servo_values.high_clamped_value = t * -1; 
   // }
   hal::print<128>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
-  m_reading.power = projected_power; 
-  m_h_bridge->power(m_reading.power);
+  m_active_power = projected_power; 
+  m_h_bridge->power(m_active_power);
 }
 
 // use actual position here once can be communicated/calculated via can 
@@ -273,8 +233,16 @@ float bldc_perseus::get_prev_joint_position() {
   return m_prev_joint_position; 
 }
 
+void bldc_perseus::set_angle_offset(float angle_offset) {
+  m_servo_values.angle_offset = angle_offset; 
+}
+
+float bldc_perseus::get_angle_offset() {
+  return m_servo_values.angle_offset; 
+}
+
 void bldc_perseus::set_actual_position() {
-  m_actual_position = m_reading.position + m_servo_values.angle_offset + m_prev_joint_position; 
+  m_actual_position = read_angle() + m_servo_values.angle_offset + m_prev_joint_position; 
 }
 
 float bldc_perseus::get_actual_position() {
@@ -286,13 +254,16 @@ void bldc_perseus::set_servo_values(servo_values p_servo_values) {
 }
 
 void bldc_perseus::periodic_action(bool new_action) {
-  switch (static_cast<can_perseus::action>(m_reading_action)) {
+  auto console = resources::console(); 
+  switch (static_cast<can_perseus::action>(m_active_action)) {
     case can_perseus::action::homing: {
-      bldc_perseus::home_encoder(); 
+      home_encoder(); 
       break; 
     }
     case can_perseus::action::set_position_target: {
-      bldc_perseus::update_position(new_action); 
+      update_position(new_action); 
+      hal::print<128>(*console, "Target pos: %f", get_target_position()); 
+      hal::delay(*m_clock, 1000ms);
       break;
     }
     default:

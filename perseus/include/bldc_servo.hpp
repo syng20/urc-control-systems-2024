@@ -5,12 +5,9 @@
 #include <libhal/pointers.hpp>
 #include <libhal/rotation_sensor.hpp>
 #include <libhal/units.hpp>
-// #include <libhal/can.hpp>
 
+#include <resource_list.hpp>
 // #include <can_messaging.hpp>
-#include <resource_list.hpp>
-
-#include <resource_list.hpp>
 
 
 using sec = float;
@@ -111,11 +108,6 @@ public:
    */
   void stop();
 
-  /**
-   * @brief Freezes in place by having motor rely solely on feedforward. 
-   */
-  void freeze(); 
-
 
   hal::degrees read_angle(); 
 
@@ -205,13 +197,13 @@ public:
     * @brief Set the servo's current action 
     * @param action can_perseus::action value to be set 
   */
-  void set_reading_action(uint32_t action); 
+  void set_active_action(uint32_t action); 
   
   /**
     * @brief Get the servo's current action 
     * @return Returns the current action as a can_perseus::action 
   */
-  uint32_t get_reading_action(); 
+  uint32_t get_active_action(); 
 
   /**
    * @brief Resets the internal time tracking for the servo, this will be done
@@ -238,6 +230,9 @@ public:
     return static_cast<float>(p_time.count()) * 1e-9f;
   }
 
+  void set_angle_offset(float angle_offset);
+  float get_angle_offset();
+
   void set_prev_joint_position(float prev_joint_pos); 
   float get_prev_joint_position(); 
   void set_actual_position(); 
@@ -255,7 +250,6 @@ private:
   hal::v5::strong_ptr<hal::steady_clock> 
     m_clock;
   hal::u64 m_last_clock_check; 
-  status m_reading;
   status m_target;
   PID_settings m_reading_position_settings;
   PID_settings m_reading_velocity_settings;
@@ -266,8 +260,8 @@ private:
   float m_prev_encoder_value;
   float m_actual_position; 
   float m_prev_joint_position; 
-  float home_encoder_value;
-  uint32_t m_reading_action; 
+  float m_active_power; 
+  uint32_t m_active_action; 
 };
 
 }  // namespace sjsu::perseus
