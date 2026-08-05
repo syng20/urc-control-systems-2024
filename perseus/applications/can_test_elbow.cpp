@@ -70,7 +70,7 @@ void application()
   auto can_interrupt = resources::can_interrupt();
   auto can_id_filter = resources::can_identifier_filter();
   static constexpr auto baudrate = 1_MHz;
-  can_perseus servo_can(allowed_id, baudrate, can_transceiver, can_bus_manager, can_interrupt, can_id_filter); 
+  can_perseus servo_can(allowed_id, baudrate, can_transceiver, can_bus_manager,  can_id_filter); 
   auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
   hal::print(*console, "Servo can creature setup...\n");
   
