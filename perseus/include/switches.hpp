@@ -30,7 +30,13 @@ public:
     hal::u8 read_switch_value(); 
 
 private: 
-    bool m_s1, m_s2, m_s3, m_s4, m_s5, m_s6, m_s7; 
+    hal::v5::strong_ptr<hal::input_pin> m_s1;
+    hal::v5::strong_ptr<hal::input_pin> m_s2;
+    hal::v5::strong_ptr<hal::input_pin> m_s3;
+    hal::v5::strong_ptr<hal::input_pin> m_s4;
+    hal::v5::strong_ptr<hal::input_pin> m_s5;
+    hal::v5::strong_ptr<hal::input_pin> m_s6;
+    hal::v5::strong_ptr<hal::input_pin> m_s7;
     hal::u8 m_switch_value; 
 };
 
