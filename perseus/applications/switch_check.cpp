@@ -27,13 +27,12 @@ void application()
                     resources::switch_g3(), 
                     resources::switch_g4(), 
                     resources::switch_g5(), 
-                    resources::switch_g6(), 
-                    resources::switch_g7()); 
+                    resources::switch_g6()); 
     auto switches_ptr = hal::v5::make_strong_ptr<decltype(switches)>(resources::driver_allocator(), std::move(switches));
 
     while(true) {
     
-        hal::print<64>(*console, "Pins: %d", switches_ptr->read_switch_value()); 
+        hal::print<64>(*console, "Pins: %d\n", switches_ptr->read_switch_value()); 
         hal::delay(*clock, 5000ms); 
     
     }

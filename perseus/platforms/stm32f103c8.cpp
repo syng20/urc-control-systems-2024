@@ -198,7 +198,7 @@ hal::v5::strong_ptr<hal::input_pin> switch_g2()
       hal::v5::make_strong_ptr<decltype(switch_g2)>(
         driver_allocator(), std::move(switch_g2));
   }
-  return switch_g1_ptr;
+  return switch_g2_ptr;
 }
 hal::v5::optional_ptr<hal::input_pin> switch_g3_ptr;
 hal::v5::strong_ptr<hal::input_pin> switch_g3()
@@ -209,7 +209,7 @@ hal::v5::strong_ptr<hal::input_pin> switch_g3()
       hal::v5::make_strong_ptr<decltype(switch_g3)>(
         driver_allocator(), std::move(switch_g3));
   }
-  return switch_g1_ptr;
+  return switch_g3_ptr;
 }
 hal::v5::optional_ptr<hal::input_pin> switch_g4_ptr;
 hal::v5::strong_ptr<hal::input_pin> switch_g4()
@@ -220,7 +220,7 @@ hal::v5::strong_ptr<hal::input_pin> switch_g4()
       hal::v5::make_strong_ptr<decltype(switch_g4)>(
         driver_allocator(), std::move(switch_g4));
   }
-  return switch_g1_ptr;
+  return switch_g4_ptr;
 }
 hal::v5::optional_ptr<hal::input_pin> switch_g5_ptr;
 hal::v5::strong_ptr<hal::input_pin> switch_g5()
@@ -231,7 +231,7 @@ hal::v5::strong_ptr<hal::input_pin> switch_g5()
       hal::v5::make_strong_ptr<decltype(switch_g5)>(
         driver_allocator(), std::move(switch_g5));
   }
-  return switch_g1_ptr;
+  return switch_g5_ptr;
 }
 hal::v5::optional_ptr<hal::input_pin> switch_g6_ptr;
 hal::v5::strong_ptr<hal::input_pin> switch_g6()
@@ -242,7 +242,7 @@ hal::v5::strong_ptr<hal::input_pin> switch_g6()
       hal::v5::make_strong_ptr<decltype(switch_g6)>(
         driver_allocator(), std::move(switch_g6));
   }
-  return switch_g1_ptr;
+  return switch_g6_ptr;
 }
 hal::v5::optional_ptr<hal::input_pin> switch_g7_ptr;
 hal::v5::strong_ptr<hal::input_pin> switch_g7()
@@ -253,7 +253,7 @@ hal::v5::strong_ptr<hal::input_pin> switch_g7()
       hal::v5::make_strong_ptr<decltype(switch_g7)>(
         driver_allocator(), std::move(switch_g7));
   }
-  return switch_g1_ptr;
+  return switch_g7_ptr;
 }
 
 

@@ -27,6 +27,7 @@ libhal_build_demos(
     can_test_wrist_l
     can_test_wrist_r
     can_test_endeff
+    switch_check
 
   
   INCLUDES
