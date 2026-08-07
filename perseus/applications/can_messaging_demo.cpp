@@ -106,21 +106,6 @@ void application()
       }; 
       break; 
     case can_perseus::wrist_left:
-      // pid
-      pid_settings = {
-        .kp = 0.005,
-        .ki = 0.00,
-        .kd = 0.00,
-      };
-      // servo 
-      servo_values = {
-        .gear_ratio = 2640.55, // 5281.1 * 1 / 2
-        .angle_offset = 0, 
-        .fight_gravity = 0.2, 
-        .high_clamped_value = 0.3, 
-        .low_clamped_value = -0.3 
-      }; 
-      break; 
     case can_perseus::wrist_right:
       // pid
       pid_settings = {

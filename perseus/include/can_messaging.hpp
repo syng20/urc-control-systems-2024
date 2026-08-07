@@ -22,7 +22,7 @@ public:
     ); 
 
 
-    enum class action : uint32_t
+    enum class action : uint8_t
     {
     // top priority
     power_off_reset = 0x0C,  // hard stop the servo to be 0
