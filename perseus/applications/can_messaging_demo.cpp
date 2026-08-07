@@ -10,7 +10,7 @@
 #include <bldc_servo.hpp>
 #include <can_messaging.hpp>
 #include <switches.hpp>
-#include "perseus_can_demo.cpp"
+#include "can_perseus_applications.cpp"
 #include <resource_list.hpp>
 
 
