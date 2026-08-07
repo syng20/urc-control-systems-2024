@@ -256,13 +256,6 @@ hal::v5::strong_ptr<hal::input_pin> switch_g7()
   return switch_g7_ptr;
 }
 
-
-
-
-
-
-
-
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {
   // auto a_low = resources::pwm0_a8();
