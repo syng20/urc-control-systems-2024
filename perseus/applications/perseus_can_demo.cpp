@@ -33,14 +33,13 @@ void print_can_message(hal::serial& p_console,
   hal::print(p_console, "]\n}\n");
 }
 
-void can_application(hal::v5::strong_ptr<bldc_perseus> servo_ptr, hal::v5::strong_ptr<can_perseus> can_ptr)
+void can_application(hal::v5::strong_ptr<bldc_perseus> servo_ptr, 
+                      hal::v5::strong_ptr<can_perseus> can_ptr, 
+                      hal::v5::strong_ptr<hal::serial> console, 
+                      hal::v5::strong_ptr<hal::steady_clock> clock)
 {
   using namespace hal::literals;
   using namespace std::chrono_literals;
-
-  // gen
-  auto clock = resources::clock();
-  auto console = resources::console();
   
   bool new_action = false; 
   int delay_counter = 0; 

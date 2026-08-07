@@ -21,13 +21,14 @@ libhal_build_demos(
     application
     # can_test
     # can_test_wrist
-    can_test_elbow 
-    can_test_shoulder
-    can_test_track
-    can_test_wrist_l
-    can_test_wrist_r
-    can_test_endeff
+    # can_test_elbow 
+    # can_test_shoulder
+    # can_test_track
+    # can_test_wrist_l
+    # can_test_wrist_r
+    # can_test_endeff
     switch_check
+    can_messaging
 
   
   INCLUDES
