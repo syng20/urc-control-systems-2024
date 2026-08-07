@@ -27,7 +27,7 @@ void application()
   auto console = resources::console();
   // CHANGE SERVO
   // track 
-  constexpr can_perseus::servo_address allowed_id = can_perseus::clamp; 
+  constexpr can_perseus::servo_address allowed_id = can_perseus::end_effector; 
   // pid
   bldc_perseus::PID_settings pid_settings = {
     .kp = 0.05, 

@@ -59,11 +59,7 @@ public:
     elbow_servo = 0x123,
     wrist_left = 0x124,
     wrist_right = 0x125,
-    clamp = 0x126,
-
-    from_shoulder = 0x321, 
-    from_elbow = 0x322
-
+    end_effector = 0x126
     };
 
     void set_curr_servo_addr(hal::u16 servo_addr); 
