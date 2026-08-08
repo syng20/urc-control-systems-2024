@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "h_bridge.hpp"
 #include <libhal-arm-mcu/dwt_counter.hpp>
 #include <libhal-arm-mcu/startup.hpp>
 #include <libhal-arm-mcu/stm32f1/can2.hpp>
@@ -31,6 +32,7 @@
 #include <libhal/output_pin.hpp>
 #include <libhal/pointers.hpp>
 #include <libhal/pwm.hpp>
+#include <libhal/rotation_sensor.hpp>
 #include <resource_list.hpp>
 
 
@@ -205,15 +207,20 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_2()
   return pwm_channel_2_ptr; 
 }
 
+// TODO -- I have questions about this one
+hal::v5::optional_ptr<hal::rotation_sensor> encoder_ptr; 
 hal::v5::strong_ptr<hal::rotation_sensor> encoder() 
 {
-  return timer2().acquire_quadrature_encoder(
+  if (not encoder_ptr) {
+    encoder_ptr = timer2().acquire_quadrature_encoder(
     driver_allocator(),
-    { .channel_a=static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-      .channel_b=static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+    {static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
       1); 
       // returns ticks multiplied by 360 degrees 
       // need to divide by ticks per rotation and gear ratio to get pure degrees or linear movement 
+  }
+  return encoder_ptr; 
 }
 
 // all the pins for the switches at the bottom of the pcb 
@@ -295,21 +302,25 @@ hal::v5::strong_ptr<hal::input_pin> switch_g7()
   return switch_g7_ptr;
 }
 
+hal::v5::optional_ptr<sjsu::drivers::h_bridge> h_bridge_ptr; 
 hal::v5::strong_ptr<sjsu::drivers::h_bridge> h_bridge()
 {
-  // auto a_low = resources::pwm0_a8();
-  auto b_low = resources::rx1_a3();
-  auto c_low = resources::tx1_a2(); 
-  hal::print(*console_ptr, "Acquired h-bridge low pins\n");
-  // auto a_high = resources::pwm_channel_0();
-  auto b_high = resources::pwm_channel_1();
-  auto c_high = resources::pwm_channel_2(); 
-  hal::print(*console_ptr, "Acquired h-bridge high pins\n");
-  // auto h_bridge = sjsu::drivers::h_bridge({ a_high, a_low }, { b_high, b_low });
-  auto h_bridge = sjsu::drivers::h_bridge(
-    { .p_high=c_high, .p_low=c_low }, { .p_high=b_high, .p_low=b_low });
-  return hal::v5::make_strong_ptr<decltype(h_bridge)>(
-    resources::driver_allocator(), std::move(h_bridge));
+  if (not h_bridge_ptr) {
+    // auto a_low = resources::pwm0_a8();
+    auto b_low = resources::rx1_a3();
+    auto c_low = resources::tx1_a2(); 
+    hal::print(*console_ptr, "Acquired h-bridge low pins\n");
+    // auto a_high = resources::pwm_channel_0();
+    auto b_high = resources::pwm_channel_1();
+    auto c_high = resources::pwm_channel_2(); 
+    hal::print(*console_ptr, "Acquired h-bridge high pins\n");
+    // auto h_bridge = sjsu::drivers::h_bridge({ a_high, a_low }, { b_high, b_low });
+    auto h_bridge = sjsu::drivers::h_bridge(
+      { .p_high=c_high, .p_low=c_low }, { .p_high=b_high, .p_low=b_low });
+    h_bridge_ptr = hal::v5::make_strong_ptr<decltype(h_bridge)>(
+      resources::driver_allocator(), std::move(h_bridge));
+  }
+  return h_bridge_ptr; 
 }
 
 hal::v5::optional_ptr<hal::stm32f1::can_peripheral_manager_v2> can_manager;
@@ -338,18 +349,28 @@ void initialize_can()
   }
 }
 
+hal::v5::optional_ptr<hal::can_transceiver> can_transceiver_ptr;
 hal::v5::strong_ptr<hal::can_transceiver> can_transceiver()
 {
   initialize_can();
-  return hal::acquire_can_transceiver(driver_allocator(), can_manager);
+  if (not can_transceiver_ptr) {
+   can_transceiver_ptr = hal::acquire_can_transceiver(driver_allocator(), can_manager);
+  }
+  return can_transceiver_ptr; 
 }
 
+hal::v5::optional_ptr<hal::can_bus_manager> can_bus_manager_ptr;
 hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager()
 {
   initialize_can();
-  return hal::acquire_can_bus_manager(driver_allocator(), can_manager);
+  if (not can_bus_manager_ptr) {
+    can_bus_manager_ptr =
+      hal::acquire_can_bus_manager(driver_allocator(), can_manager);
+  }
+  return can_bus_manager_ptr;
 }
 
+// TODO -- I have questions about this one
 hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
 {
   initialize_can();

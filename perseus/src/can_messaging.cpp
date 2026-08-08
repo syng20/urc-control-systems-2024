@@ -114,7 +114,7 @@ void can_perseus::print_can_message(hal::serial& p_console,
 }
 
 void can_perseus::process_can_message(hal::can_message const& p_message,
-                        hal::v5::strong_ptr<bldc_perseus> bldc)
+                        hal::v5::strong_ptr<bldc_perseus> const& bldc)
 {   
   auto console = resources::console();
   hal::can_message response {
@@ -449,7 +449,7 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
 }
 
 void can_perseus::periodic_action(uint32_t curr_action, 
-                        hal::v5::strong_ptr<bldc_perseus> bldc) {
+                        hal::v5::strong_ptr<bldc_perseus> const& bldc) {
   auto console = resources::console(); 
   float exponent = 14;
   hal::i32 t = floating_to_fixed_point_32(position_to_floating(bldc->get_actual_position()), exponent);

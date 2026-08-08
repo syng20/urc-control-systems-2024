@@ -25,7 +25,7 @@ public:
     enum class action : uint8_t
     {
     // top priority
-    power_off_reset = 0x0C,  // hard stop the servo to be 0
+    power_off_reset = 0x0C,  // kill kill stop die
     heartbeat = 0x0E, // are you alive
 
     // actuators
@@ -33,7 +33,6 @@ public:
     set_position_target = 0x12,
     set_position_reading = 0x13, 
     set_velocity_target = 0x14, 
-//     set_velocity_reading = 0x15,
     set_power = 0x16, 
     set_pid_position_config = 0x17,
     set_pid_velocity_config = 0x18,
@@ -52,6 +51,7 @@ public:
     prev_joint_actual_position = 0x41, 
     prev_joint_position_response = 0x51, 
     };
+
     enum servo_address : hal::u16
     {
     track_servo = 0x121,
@@ -73,9 +73,9 @@ public:
     hal::i32 floating_to_fixed_point_32(float n, int exponent); 
     hal::i16 floating_to_fixed_point_16(float n, int exponent); 
     void process_can_message(hal::can_message const& p_message,
-                        hal::v5::strong_ptr<bldc_perseus> bldc);
+                        hal::v5::strong_ptr<bldc_perseus> const& bldc);
     void periodic_action(uint32_t curr_action, 
-                        hal::v5::strong_ptr<bldc_perseus> bldc); 
+                        hal::v5::strong_ptr<bldc_perseus> const& bldc); 
     std::optional<hal::can_message> check_for_mc_message(); 
     std::optional<hal::can_message> check_for_joint_message(); 
 

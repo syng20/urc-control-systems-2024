@@ -16,15 +16,19 @@ using namespace std::chrono_literals;
 namespace sjsu::perseus {
 
 void can_application(hal::v5::strong_ptr<bldc_perseus> servo_ptr, 
-                      hal::v5::strong_ptr<can_perseus> can_ptr, 
-                      hal::v5::strong_ptr<hal::serial> console, 
-                      hal::v5::strong_ptr<hal::steady_clock> clock)
+                      hal::v5::strong_ptr<can_perseus> can_ptr ) //, 
+                    //  hal::v5::strong_ptr<hal::serial> console, 
+                    //  hal::v5::strong_ptr<hal::steady_clock> clock)
 {
   using namespace hal::literals;
   using namespace std::chrono_literals;
+
+  // general 
+  auto clock = resources::clock();
+  auto console = resources::console();
   
   bool new_action = false; 
-  int delay_counter = 0; 
+  // int delay_counter = 0; 
 
   while (true) {
 
@@ -36,20 +40,21 @@ void can_application(hal::v5::strong_ptr<bldc_perseus> servo_ptr,
       can_ptr->print_can_message(*console, *msg);
       can_ptr->process_can_message(*msg, servo_ptr); 
       hal::print<64>(*console, "Action: %x \n", servo_ptr->get_active_action());
-      new_action = true; 
+      // new_action = true; 
     }
 
     // continue action 
-    if(servo_ptr->get_active_action() != 0) {
-      if (delay_counter >= 6) {
-        delay_counter = 0;
-        can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
-      }
-      servo_ptr->periodic_action(new_action); 
-    }
-    
+    // if(servo_ptr->get_active_action() != 0) {
+    //   if (delay_counter >= 6) {
+    //     delay_counter = 0;
+    //     can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
+    //   }
+    //   servo_ptr->periodic_action(new_action); 
+    // }
+    can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
+    servo_ptr->periodic_action(new_action); 
     new_action = false; 
-    delay_counter++; 
+    // delay_counter++; 
     hal::delay(*clock, 50ms); 
 
 
