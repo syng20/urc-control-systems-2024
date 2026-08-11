@@ -214,8 +214,8 @@ hal::v5::strong_ptr<hal::rotation_sensor> encoder()
   if (not encoder_ptr) {
     encoder_ptr = timer2().acquire_quadrature_encoder(
     driver_allocator(),
-    {static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
-      static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
+    {.channel_a=static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa0),
+      .channel_b=static_cast<hal::stm32f1::timer_pins>(hal::stm32f1::timer2_pin::pa1) },
       1); 
       // returns ticks multiplied by 360 degrees 
       // need to divide by ticks per rotation and gear ratio to get pure degrees or linear movement 

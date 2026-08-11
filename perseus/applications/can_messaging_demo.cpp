@@ -28,23 +28,10 @@ void application()
   auto console = resources::console();
 
   // variables used to initalize bldc_perseus
-  // pid settings 
-  bldc_perseus::PID_settings pid_settings = {
-    .kp = 0.00, 
-    .ki = 0.00, 
-    .kd = 0.00,
-  };
-  // servo values 
-  bldc_perseus::servo_values servo_values = {
-    .gear_ratio = 0, 
-    .angle_offset = 0, 
-    .fight_gravity = 0, 
-    .high_clamped_value = 0.0, 
-    .low_clamped_value = 0.0 
-  }; 
+  bldc_perseus::PID_settings pid_settings;
+  bldc_perseus::servo_values servo_values;
   // variables used to initalize can_perseus
   can_perseus::servo_address allowed_id; 
-  // auto baudrate = 1_MHz;
 
   // figure out who this is by the value of the switches 
   auto switches = switches_bldc(resources::switch_g1(), 
@@ -147,23 +134,21 @@ void application()
   auto encoder = resources::encoder();
   bldc_perseus servo(h_bridge, encoder);
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
-  // hal::print(*console, "BLDC Servo created...\n");
   servo_ptr->update_pid_position(pid_settings);
   servo_ptr->set_servo_values(servo_values); 
   servo_ptr->set_actual_position();
-  // hal::print(*console, "BLDC Servo values updated...\n");
-
+  
   // create can_perseus 
   auto can_transceiver = resources::can_transceiver();
   auto can_bus_manager = resources::can_bus_manager();
   auto can_id_filter = resources::can_identifier_filter();
   can_perseus servo_can(allowed_id, 1_MHz, can_transceiver, can_bus_manager,  can_id_filter); 
   auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
-  // hal::print(*console, "Servo can creature setup...\n");
-
+  
   hal::print(*console, "Begin.\n");
+  
   // start the forever loop 
-  can_application(servo_ptr, can_ptr); //, console, clock);
+  can_application(servo_ptr, can_ptr); 
   
 }
 }  // namespace sjsu::perseus
