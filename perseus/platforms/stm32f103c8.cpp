@@ -207,7 +207,6 @@ hal::v5::strong_ptr<hal::pwm16_channel> pwm_channel_2()
   return pwm_channel_2_ptr; 
 }
 
-// TODO -- I have questions about this one
 hal::v5::optional_ptr<hal::rotation_sensor> encoder_ptr; 
 hal::v5::strong_ptr<hal::rotation_sensor> encoder() 
 {
@@ -370,7 +369,6 @@ hal::v5::strong_ptr<hal::can_bus_manager> can_bus_manager()
   return can_bus_manager_ptr;
 }
 
-// TODO -- I have questions about this one
 hal::v5::strong_ptr<hal::can_identifier_filter> can_identifier_filter()
 {
   initialize_can();

@@ -16,6 +16,7 @@ public:
     can_perseus(
         hal::u16 p_servo_addr,
         hal::u32 p_baudrate,
+        hal::u8 p_listen_prev,
         hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
         hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
         hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
@@ -25,8 +26,8 @@ public:
     enum class action : uint8_t
     {
     // top priority
-    power_off_reset = 0x0C,  // kill kill stop die
-    heartbeat = 0x0E, // are you alive
+    power_off_reset = 0x0C,  
+    heartbeat = 0x0E, 
 
     // actuators
     homing = 0x11, 
@@ -72,7 +73,7 @@ public:
     float position_to_floating(float position); 
     hal::i32 floating_to_fixed_point_32(float n, float exponent); 
     hal::i16 floating_to_fixed_point_16(float n, float exponent); 
-    void create_response(hal::v5::strong_ptr<hal::can_message> const& r_message, 
+    void create_response(hal::can_message r_message, 
                             hal::byte r_id, hal::byte r_len, 
                             hal::byte r0, hal::byte r1, hal::byte r2, hal::byte r3, 
                             hal::byte r4, hal::byte r5, hal::byte r6, hal::byte r7); 
@@ -86,10 +87,11 @@ public:
 private: 
     hal::u16 m_self_servo_addr;
     hal::u32 m_baudrate;
+    hal::u8 m_listen_prev; // 0 = doesn't need info from prev joint, 1 = from prev, 2 = from prev prev
     hal::v5::strong_ptr<hal::can_transceiver> m_can_transceiver;
     hal::v5::strong_ptr<hal::can_bus_manager> m_can_bus_manager;
     hal::v5::strong_ptr<hal::can_identifier_filter> m_can_identifier_filter;
-    hal::v5::strong_ptr<hal::can_message> m_response;
+    hal::can_message m_response;
     hal::can_message_finder m_mc_message_finder;
     hal::can_message_finder m_mc_all_message_finder;
 }; 

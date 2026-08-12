@@ -26,6 +26,7 @@ void can_application(hal::v5::strong_ptr<bldc_perseus> const& servo_ptr,
   auto console = resources::console();
   
   bool new_action = false; 
+  bool start = false; 
 
   while (true) {
 
@@ -38,13 +39,16 @@ void can_application(hal::v5::strong_ptr<bldc_perseus> const& servo_ptr,
       can_ptr->process_can_message(*msg, servo_ptr); 
       hal::print<64>(*console, "Action: %x \n", servo_ptr->get_active_action());
       new_action = true; 
+      start = true; 
     }
 
-    can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
-    servo_ptr->periodic_action(new_action); 
-    new_action = false; 
-    hal::delay(*clock, 50ms); 
+    if (start) {
+      can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
+      servo_ptr->periodic_action(new_action); 
+      new_action = false; 
+    }
 
+    hal::delay(*clock, 50ms); 
 
   }
   

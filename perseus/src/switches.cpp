@@ -11,7 +11,6 @@ using sec = float;
 
 namespace sjsu::perseus {
 
-// TODO -- I have questions about this one
 switches_bldc::switches_bldc(
     hal::v5::strong_ptr<hal::input_pin> p_s1, 
     hal::v5::strong_ptr<hal::input_pin> p_s2, 

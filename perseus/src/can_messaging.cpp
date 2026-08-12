@@ -20,6 +20,7 @@ namespace sjsu::perseus {
 can_perseus::can_perseus(
     hal::u16 p_curr_servo_addr,
     hal::u32 p_baudrate,
+    hal::u8 p_listen_prev, 
     hal::v5::strong_ptr<hal::can_transceiver> p_can_transceiver,
     hal::v5::strong_ptr<hal::can_bus_manager> p_can_bus_manager,
     hal::v5::strong_ptr<hal::can_identifier_filter> p_can_identifier_filter
@@ -27,6 +28,7 @@ can_perseus::can_perseus(
   : 
     m_self_servo_addr(p_curr_servo_addr), 
     m_baudrate(p_baudrate),
+    m_listen_prev(p_listen_prev),
     m_can_transceiver(p_can_transceiver),
     m_can_bus_manager(std::move(p_can_bus_manager)),
     m_can_identifier_filter(p_can_identifier_filter), 
@@ -41,15 +43,13 @@ can_perseus::can_perseus(
                  m_can_transceiver->receive_buffer().size());
   hal::print<64>(
     *console, "🆔 Allowing ID [0x%lX] through the filter!\n", m_self_servo_addr);
-  hal::can_message response {
+  m_response = {
     .id = 0x000,
     .extended=false,
     .remote_request=false,
     .length = 0,
     .payload = {},
   };
-  m_response = hal::v5::make_strong_ptr<hal::can_message>(
-    resources::driver_allocator(), response); 
 };
 
 // decode message from mission control 
@@ -126,21 +126,21 @@ void can_perseus::print_can_message(hal::serial& p_console,
                   p_message.payload[7]);
 }
 
-void can_perseus::create_response(hal::strong_ptr<hal::can_message> const& r_message,
-                                    hal::byte r_id, hal::byte r_len, 
-                                    hal::byte r0, hal::byte r1, hal::byte r2, hal::byte r3, 
-                                    hal::byte r4, hal::byte r5, hal::byte r6, hal::byte r7) 
+void can_perseus::create_response(hal::can_message r_message,
+                                    hal::byte id, hal::byte len, 
+                                    hal::byte b0, hal::byte b1, hal::byte b2, hal::byte b3, 
+                                    hal::byte b4, hal::byte b5, hal::byte b6, hal::byte b7) 
                                   {
-  r_message->id = r_id; 
-  r_message->length = r_len; 
-  r_message->payload[0] = r0;
-  r_message->payload[1] = r1; 
-  r_message->payload[2] = r2; 
-  r_message->payload[3] = r3; 
-  r_message->payload[4] = r4; 
-  r_message->payload[5] = r5; 
-  r_message->payload[6] = r6; 
-  r_message->payload[7] = r7; 
+  r_message.id = id; 
+  r_message.length = len; 
+  r_message.payload[0] = b0;
+  r_message.payload[1] = b1; 
+  r_message.payload[2] = b2; 
+  r_message.payload[3] = b3; 
+  r_message.payload[4] = b4; 
+  r_message.payload[5] = b5; 
+  r_message.payload[6] = b6; 
+  r_message.payload[7] = b7; 
   
 }
 
@@ -204,7 +204,9 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       //   else {
       //     request.id = m_self_servo_addr - 1; 
       //   } 
-      if (m_self_servo_addr == servo_address::elbow_servo) {
+      // if (m_self_servo_addr == servo_address::elbow_servo) {
+      if (m_listen_prev > 0) {
+        request.id = m_self_servo_addr - m_listen_prev; 
         request.length = 3; 
         request.payload[0] = static_cast<hal::byte>(action::prev_joint_actual_position); 
         request.payload[1] = static_cast<hal::byte>(m_self_servo_addr >> 8) & 0xFF; 
@@ -451,8 +453,8 @@ void can_perseus::process_can_message(hal::can_message const& p_message,
       throw hal::operation_not_supported(nullptr); 
       break; 
   }
-  m_mc_message_finder.transceiver().send(*m_response);
-  print_can_message(*console, *m_response);
+  m_mc_message_finder.transceiver().send(m_response);
+  print_can_message(*console, m_response);
   hal::print<64>(*console, "finished transmission\n");
 }
 
@@ -467,7 +469,8 @@ void can_perseus::periodic_action(uint32_t curr_action,
     .extended=false,
     .remote_request=false,
     .length = 0,
-    .payload = {},
+    .payload = {0x00, 0x00, 0x00, 0x00, 
+                0x00, 0x00, 0x00, 0x00},
   };
   switch (static_cast<can_perseus::action>(curr_action)) {
     case can_perseus::action::homing: {

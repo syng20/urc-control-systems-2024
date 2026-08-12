@@ -32,7 +32,7 @@ void application()
   bldc_perseus::servo_values servo_values;
   // variables used to initalize can_perseus
   can_perseus::servo_address allowed_id; 
-
+  hal::u8 listen_prev = 0; 
   // figure out who this is by the value of the switches 
   auto switches = switches_bldc(resources::switch_g1(), 
                     resources::switch_g2(), 
@@ -58,6 +58,8 @@ void application()
         .high_clamped_value = 0.3, 
         .low_clamped_value = -0.3 
       }; 
+      // listening to previous joint?  
+      listen_prev = 0; 
       break; 
     case can_perseus::shoulder_servo:
       // pid
@@ -74,6 +76,8 @@ void application()
         .high_clamped_value = 0.3, 
         .low_clamped_value = -0.3 
       }; 
+      // listening to previous joint?  
+      listen_prev = 0; 
       break; 
     case can_perseus::elbow_servo:
       // pid
@@ -90,8 +94,27 @@ void application()
         .high_clamped_value = 0, 
         .low_clamped_value = -0.3 
       }; 
+      // listening to previous joint?  
+      listen_prev = 1; 
       break; 
     case can_perseus::wrist_left:
+      // pid
+      pid_settings = {
+        .kp = 0.005,
+        .ki = 0.00,
+        .kd = 0.00,
+      };
+      // servo 
+      servo_values = {
+        .gear_ratio = 2640.55, // 5281.1 * 1 / 2
+        .angle_offset = 0, 
+        .fight_gravity = 0.2, 
+        .high_clamped_value = 0.3, 
+        .low_clamped_value = -0.3 
+      }; 
+      // listening to previous joint?  
+      listen_prev = 1; 
+      break;
     case can_perseus::wrist_right:
       // pid
       pid_settings = {
@@ -107,6 +130,8 @@ void application()
         .high_clamped_value = 0.3, 
         .low_clamped_value = -0.3 
       }; 
+      // listening to previous joint? 
+      listen_prev = 2;
       break; 
     case can_perseus::end_effector:
       // pid
@@ -123,6 +148,8 @@ void application()
         .high_clamped_value = 0.3, 
         .low_clamped_value = -0.3 
       }; 
+      // listening to previous joint?  
+      listen_prev = 0; 
       break; 
     default: 
       hal::print(*console, "Address does not exist. Exiting.\n");
@@ -142,7 +169,7 @@ void application()
   auto can_transceiver = resources::can_transceiver();
   auto can_bus_manager = resources::can_bus_manager();
   auto can_id_filter = resources::can_identifier_filter();
-  can_perseus servo_can(allowed_id, 1_MHz, can_transceiver, can_bus_manager,  can_id_filter); 
+  can_perseus servo_can(allowed_id, 1_MHz, listen_prev, can_transceiver, can_bus_manager,  can_id_filter); 
   auto can_ptr = hal::v5::make_strong_ptr<decltype(servo_can)>(resources::driver_allocator(), std::move(servo_can));
   
   hal::print(*console, "Begin.\n");

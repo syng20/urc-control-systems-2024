@@ -63,19 +63,6 @@ float bldc_perseus::get_target_position()
   return m_target.position;
 }
 
-// float bldc_perseus::get_reading_position()
-// {
-//   m_reading.position = bldc_perseus::read_angle();
-//   return m_reading.position;
-// }
-
-// void bldc_perseus::set_reading_position(float position)
-// {
-//   m_reading.position = position;
-//   auto console = resources::console(); 
-//   hal::print(*console, "\nHH\n"); 
-// }
-
 void bldc_perseus::set_target_velocity(float target_velocity)
 {
   m_target.velocity = target_velocity;
@@ -87,38 +74,14 @@ float bldc_perseus::get_target_velocity()
 }
 float bldc_perseus::get_reading_velocity()
 {
-
-  // const hal::u64 now_time = m_clock->uptime();
-  // b4
   hal::u64 time_t0 = m_clock->uptime();
   hal::degrees pos_p0 = read_angle(); 
   hal::delay(*m_clock, 100ms); 
-
-  // after
   hal::u64 time_t1 = m_clock->uptime(); 
   hal::degrees pos_p1 = read_angle(); 
-  // const hal::u64 dt_time = now_time - m_last_clock_check;
   float dt = static_cast<float>(time_t1 - time_t0) / m_clock->frequency(); 
   float dp_over_dt = (pos_p1 - pos_p0) / dt; 
-
   return dp_over_dt; 
-
-  // const float  dt_sec = static_cast<float>(dt_time) / static_cast<float>(m_clock->frequency());
-
-  // if (dt_sec <= 0.0f){
-  //   return m_reading.velocity;
-  // }
-  
-  // const hal::degrees current_position = bldc_perseus::read_angle();
-  // const float d_theta = (current_position - m_prev_encoder_value);
-  
-  // m_reading.velocity = d_theta / dt_sec;
-
-  // m_prev_encoder_value = current_position;
-  // m_last_clock_check = now_time;
-  
-  // return m_reading.velocity;
-
 }
 
 float bldc_perseus::get_power() {
@@ -228,21 +191,7 @@ void bldc_perseus::update_position(bool from_scratch)
   float feedforward = bldc_perseus::position_feedforward(); 
   // apply 
   float projected_power = pid_sum + feedforward; 
-  // CHANGE SERVO
-  // // use actual position here once can be communicated/calculated via can 
-  // if (m_actual_position < 0) 
-  // { 
-  //   projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power); 
-  // }
-  // else { 
-  //   projected_power = std::clamp(projected_power, -1 * m_clamped_power, m_clamped_power);
-  // }
   projected_power = std::clamp(projected_power, m_servo_values.low_clamped_value, m_servo_values.high_clamped_value);
-  // if (m_actual_position > 0) {
-  //   float t = m_servo_values.low_clamped_value; 
-  //   m_servo_values.low_clamped_value = m_servo_values.high_clamped_value * -1; 
-  //   m_servo_values.high_clamped_value = t * -1; 
-  // }
   hal::print<128>(*console, "Target: %f, Position: %f, Error: %f, pid: %f, projected: %f\n", m_target.position, m_actual_position, error, pid_sum, projected_power); 
   m_active_power = projected_power; 
   m_h_bridge->power(m_active_power);

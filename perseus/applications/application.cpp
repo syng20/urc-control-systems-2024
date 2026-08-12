@@ -35,12 +35,12 @@ void application()
   auto servo_ptr = hal::v5::make_strong_ptr<decltype(servo)>(resources::driver_allocator(), std::move(servo));
   // servo values (shoulder)
   bldc_perseus::servo_values servo_values = {
-    .gear_ratio = 73935.4, // 5281.1 * 28 / 2
-    .angle_offset = 0, 
-    .fight_gravity = 0, 
-    .high_clamped_value = 0.3, 
-    .low_clamped_value = -0.3 
-  }; 
+    .gear_ratio = 5281.1, // 5281.1 * 2 / 2
+        .angle_offset = 0, 
+        .fight_gravity = 0.15, 
+        .high_clamped_value = 0, 
+        .low_clamped_value = -0.3 
+      }; 
   servo_ptr->set_servo_values(servo_values); 
 
 
@@ -53,7 +53,7 @@ void application()
     // hal::delay(*clock, 5000ms);
     // hal::print(*console, "Switch 0.3\n");
   
-    hal::print<64> (*console, "position: %f\n", servo_ptr->get_actual_position());
+    hal::print<64> (*console, "position: %f\n", servo_ptr->get_reading_velocity());
     hal::delay(*clock,100ms);
   }
 
