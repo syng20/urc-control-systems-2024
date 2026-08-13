@@ -242,7 +242,7 @@ void bldc_perseus::periodic_action(bool new_action) {
     case can_perseus::action::set_position_target: {
       update_position(new_action); 
       // hal::print<128>(*console, "Target pos: %f", get_target_position()); 
-      hal::delay(*m_clock, 1000ms);
+      // hal::delay(*m_clock, 1000ms);
       break;
     }
     default:
