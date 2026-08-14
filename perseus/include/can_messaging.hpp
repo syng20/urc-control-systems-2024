@@ -1,14 +1,12 @@
 #pragma once
-#include <libhal-arm-mcu/stm32_generic/quadrature_encoder.hpp>
 #include <libhal/can.hpp>
 #include <libhal/pointers.hpp>
-#include <libhal/rotation_sensor.hpp>
 #include <libhal/units.hpp>
 
 #include <bldc_servo.hpp>
 
 namespace sjsu::perseus {
-    
+
 class can_perseus 
 {
 
@@ -91,7 +89,6 @@ private:
     hal::v5::strong_ptr<hal::can_transceiver> m_can_transceiver;
     hal::v5::strong_ptr<hal::can_bus_manager> m_can_bus_manager;
     hal::v5::strong_ptr<hal::can_identifier_filter> m_can_identifier_filter;
-    hal::can_message m_response;
     hal::can_message_finder m_mc_message_finder;
     hal::can_message_finder m_mc_all_message_finder;
 }; 

@@ -1,8 +1,6 @@
-#include <libhal-arm-mcu/stm32_generic/quadrature_encoder.hpp>
 #include <libhal/units.hpp>
 #include <libhal-util/serial.hpp>
 #include <libhal-util/steady_clock.hpp>
-#include <libhal/steady_clock.hpp>
 #include <libhal/units.hpp>
 #include <sys/types.h>
 
