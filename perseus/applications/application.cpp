@@ -38,8 +38,9 @@ void application()
     .gear_ratio = 5281.1, // 5281.1 * 2 / 2
         .angle_offset = 0, 
         .fight_gravity = 0.15, 
-        .high_clamped_value = 0, 
-        .low_clamped_value = -0.3 
+        .high_clamped_value = 0.1, 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = false 
       }; 
   servo_ptr->set_servo_values(servo_values); 
 

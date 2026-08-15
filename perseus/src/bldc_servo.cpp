@@ -43,7 +43,8 @@ bldc_perseus::bldc_perseus(hal::v5::strong_ptr<sjsu::drivers::h_bridge> p_hbridg
     .angle_offset = 0.01, 
     .fight_gravity = 0.01, 
     .high_clamped_value = 0.01, 
-    .low_clamped_value = -0.01 
+    .low_clamped_value = -0.01, 
+    .flipped_direction = false
   }; 
 // CHANGE SERVO
   m_actual_position = m_servo_values.angle_offset;  
@@ -219,7 +220,13 @@ float bldc_perseus::get_angle_offset() {
 }
 
 void bldc_perseus::set_actual_position() {
-  m_actual_position = read_angle() + m_servo_values.angle_offset + m_prev_joint_position; 
+  m_actual_position = read_angle() + m_servo_values.angle_offset; 
+  if (m_servo_values.flipped_direction) {
+    m_actual_position = m_actual_position - m_prev_joint_position; 
+  }
+  else {
+    m_actual_position = m_actual_position + m_prev_joint_position; 
+  }
 }
 
 float bldc_perseus::get_actual_position() {

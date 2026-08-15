@@ -62,6 +62,8 @@ public:
     // for safety
     float high_clamped_value; 
     float low_clamped_value; 
+    // which way does it spin (mainly for wrist)
+    bool flipped_direction; 
   };
   /**
     * @brief Set the target position of the servo.

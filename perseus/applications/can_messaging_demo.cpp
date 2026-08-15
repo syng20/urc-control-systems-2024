@@ -9,7 +9,7 @@
 #include <bldc_servo.hpp>
 #include <can_messaging.hpp>
 #include <switches.hpp>
-#include "can_perseus_applications.cpp"
+// #include "can_perseus_applications.cpp"
 #include <resource_list.hpp>
 
 
@@ -55,7 +55,8 @@ void application()
         .angle_offset = 0, 
         .fight_gravity = 0, 
         .high_clamped_value = 0.3, 
-        .low_clamped_value = -0.3 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = false 
       }; 
       // listening to previous joint?  
       listen_prev = 0; 
@@ -73,7 +74,8 @@ void application()
         .angle_offset = 0, 
         .fight_gravity = 0, 
         .high_clamped_value = 0.3, 
-        .low_clamped_value = -0.3 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = false 
       }; 
       // listening to previous joint?  
       listen_prev = 0; 
@@ -90,8 +92,9 @@ void application()
         .gear_ratio = 5281.1, // 5281.1 * 2 / 2
         .angle_offset = 0, 
         .fight_gravity = 0.15, 
-        .high_clamped_value = 0, 
-        .low_clamped_value = -0.3 
+        .high_clamped_value = 0.1, 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = false 
       }; 
       // listening to previous joint?  
       listen_prev = 1; 
@@ -109,7 +112,8 @@ void application()
         .angle_offset = 0, 
         .fight_gravity = 0.2, 
         .high_clamped_value = 0.3, 
-        .low_clamped_value = -0.3 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = false 
       }; 
       // listening to previous joint?  
       listen_prev = 1; 
@@ -127,7 +131,8 @@ void application()
         .angle_offset = 0, 
         .fight_gravity = 0.2, 
         .high_clamped_value = 0.3, 
-        .low_clamped_value = -0.3 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = true 
       }; 
       // listening to previous joint? 
       listen_prev = 2;
@@ -145,7 +150,8 @@ void application()
         .angle_offset = 0, 
         .fight_gravity = 0, 
         .high_clamped_value = 0.3, 
-        .low_clamped_value = -0.3 
+        .low_clamped_value = -0.3, 
+        .flipped_direction = false 
       }; 
       // listening to previous joint?  
       listen_prev = 0; 
@@ -174,7 +180,29 @@ void application()
   hal::print(*console, "Begin.\n");
   
   // start the forever loop 
-  can_application(servo_ptr, can_ptr); 
+  // can_application(servo_ptr, can_ptr); 
+  bool new_action = false; 
+
+  while (true) {
+
+    // receive message 
+    std::optional<hal::can_message> msg = can_ptr->check_for_mc_message(); 
+  
+    // react to message 
+    if (msg) {
+      can_ptr->print_can_message(*console, *msg);
+      can_ptr->process_can_message(*msg, servo_ptr); 
+      hal::print<64>(*console, "Action: %x \n", servo_ptr->get_active_action());
+      new_action = true; 
+    }
+
+    // can_ptr->periodic_action(servo_ptr->get_active_action(), servo_ptr); 
+    servo_ptr->periodic_action(new_action); 
+    new_action = false; 
+    hal::delay(*clock, 50ms); 
+
+
+  }
   
 }
 }  // namespace sjsu::perseus
