@@ -19,16 +19,8 @@ project(demos LANGUAGES CXX)
 libhal_build_demos(
   DEMOS
     application
-    # can_test
-    # can_test_wrist
-    # can_test_elbow 
-    # can_test_shoulder
-    # can_test_track
-    # can_test_wrist_l
-    # can_test_wrist_r
-    # can_test_endeff
-    switch_check
-    can_messaging
+    can_messaging_demo
+    switches_demo
 
   
   INCLUDES
@@ -41,7 +33,7 @@ SOURCES
     src/bldc_servo.cpp
     ../drivers/src/serial_commands.cpp
     src/can_messaging.cpp
-    applications/perseus_can_demo.cpp
+    applications/can_perseus_applications.cpp
     src/switches.cpp
     
 PACKAGES
